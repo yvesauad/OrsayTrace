@@ -1,6 +1,7 @@
 import numpy
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.widgets import Slider
 import time
 from tqdm import tqdm
 
@@ -147,55 +148,45 @@ class Simu:
         new_photon = photon([0, 0, 0], [0, 0, 1])
         new_photon.set_attr( sphoton.get_attr() )
         self.good_photons.append(new_photon)
-        self.saved_photons[index].append(new_photon)
+        self.saved_photons[index][subindex].append(new_photon)
 
-    #DEPRECATED. Use show_elements with True instead
-    def show_photons3D(self):
-        print(f'We have detected {len(self.good_photons)} good photons.')
-        xrefl, yrefl, zrefl = numpy.where(self.index==-1.00)
-        xrefr, yrefr, zrefr = numpy.where(self.index>1.00)
-        if self.good_photons:
-            phx, phy, phz = list(), list(), list()
-            nphx, nphy, nphz = list(), list(), list()
-            for photon in self.good_photons:
-                ipos = self.pos_to_grid(photon.pos)
-                nor = photon.normal
-                phx.append(ipos[0]); phy.append(ipos[1]); phz.append(ipos[2])
-                nphx.append(nor[0]); nphy.append(nor[1]); nphz.append(nor[2])
-            fig = plt.figure()
-            ax = plt.axes(projection='3d')
-            if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Refractive')
-            if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Reflective')
-            ax.scatter(phx, phz, phy, c='green', label='Source')
-            ax.quiver(phx, phz, phy, nphx, nphz, nphy)
-            ax.set_xlabel('X')
-            ax.set_ylabel('Z')
-            ax.set_zlabel('Y')
-            plt.legend()
-            plt.show()
-    
     def show_photons2D(self, plan='xy'):
         if 'xz' not in plan and 'xz' not in plan and 'xy' not in plan:
             raise Exception('Please pick either xy, xz or yz as plan.')
-        print(f'We have detected {len(self.good_photons)} photons.')
-        if self.good_photons:
+        
+        
+        def unpack_2d_photons(photon_list, sindex, label='Source'):
+            print(f'Unpacking 2D {len(photon_list)} photons.')
             phx, phy, phz = list(), list(), list()
             nphx, nphy, nphz = list(), list(), list()
             intensity = list()
-            for photon in self.good_photons:
-                ipos = self.pos_to_grid(photon.pos)
+
+            for photon in photon_list:
+                ipos = (photon.pos)
                 nor = photon.normal
                 phx.append(ipos[0]); phy.append(ipos[1]); phz.append(ipos[2])
                 nphx.append(nor[0]); nphy.append(nor[1]); nphz.append(nor[2])
                 intensity.append(photon.intensity)
-    
-            fig, axes = plt.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
-            #axes.hexbin(x, y, gridsize=51)
-            #axes.hist2d(x, y, 31, ([-2, 2], [-2, 2]), weights = intensity)
-            if plan=='xy': axes.hist2d(phx, phy, 31, weights = intensity)
-            if plan=='xz': axes.hist2d(phx, phz, 31, weights = intensity)
-            if plan=='yz': axes.hist2d(phy, phz, 31, weights = intensity)
-            plt.show()
+            
+            if plan=='xy': axes[sindex].hist2d(phx, phy, 31, weights = intensity, label='xy')
+            if plan=='xz': axes[sindex].hist2d(phx, phz, 31, weights = intensity, label='xz')
+            if plan=='yz': axes[sindex].hist2d(phy, phz, 31, weights = intensity, label='yz')
+        
+
+        xlen, ylen, zlen = len(self.saved_photons[0]), len(self.saved_photons[1]), len(self.saved_photons[2])
+        if xlen*ylen!=0 and xlen*zlen!=0 and ylen*zlen!=0:
+            if max(xlen, ylen, zlen)==0:
+                raise Exception('Only a single index is supported by now. Please put your plans in same dimension.')
+
+        maxcols = max(xlen, ylen, zlen)
+
+        fig, axes = plt.subplots(nrows=1, ncols=maxcols, sharex=False, sharey=False)
+
+        for index, planes in enumerate(self.saved_photons):
+            [unpack_2d_photons(photons, subindex, '') for subindex, photons in enumerate(planes) if planes]
+            
+        plt.show()
+        
 
 
     def show_elements(self, good_photons=False, mode='all'):
@@ -205,7 +196,7 @@ class Simu:
         xrefl, yrefl, zrefl = numpy.where(self.index==-1.00)
         xrefr, yrefr, zrefr = numpy.where(self.index>1.00)
 
-        def unpack_photons(photon_list):
+        def unpack_photons(photon_list, label='Source'):
             print(f'Unpacking {len(photon_list)} photons.')
             phx, phy, phz = list(), list(), list()
             nphx, nphy, nphz = list(), list(), list()
@@ -216,12 +207,13 @@ class Simu:
                 phx.append(ipos[0]); phy.append(ipos[1]); phz.append(ipos[2])
                 nphx.append(nor[0]); nphy.append(nor[1]); nphz.append(nor[2])
             
-            ax.scatter(phx, phz, phy, c='green', label='Source')
+            ax.scatter(phx, phz, phy, c='green', label=label)
             ax.quiver(phx, phz, phy, nphx, nphz, nphy)
 
 
         if good_photons:
-            [unpack_photons(photons) for photons in self.saved_photons if photons]
+            for index, planes in enumerate(self.saved_photons):
+                [unpack_photons(photons, str(subindex)) for subindex, photons in enumerate(planes) if planes]
         else:
             unpack_photons(self.photons)
         
@@ -389,10 +381,13 @@ class Simu:
     def create_analysis_plan(self, **kargs):
         if 'z' in kargs:
             self.plans[2].append(kargs['z'])
+            self.saved_photons[2].append(list())
         if 'y' in kargs:
             self.plans[1].append(kargs['y'])
+            self.saved_photons[1].append(list())
         if 'x' in kargs:
             self.plans[0].append(kargs['x'])
+            self.saved_photons[0].append(list())
 
 
     def run(self):
@@ -416,19 +411,19 @@ mirror_focus = 0.3
 yvertex = 0.5+0.3
 thickness = 1.2
 
-a = Simu(5, 5, 5, 0.03)
-a.d2_source(0.25, -2.5, [0, 0, 1], 0.22, 11)
+a = Simu(5, 5, 5, 0.04)
+a.d2_source(0.0, -2.5, [0, 0, 1], 0.32, 71)
 
 a.create_sphere_section_element([0, 0, 0.5], 1.0, 1.43, zoff=[-1, 0]) #from 2 to 3.
-a.create_rectangle_element([-1.0, 1.0, -1.0, 1.0, 0, 0.5], 1.0, [0, 0, 1]) 
+a.create_rectangle_element([-1.0, 1.0, -1.0, 1.0, 0.5, 1.0], 1.0, [0, 0, 1]) 
 
 #a.create_parabolic_section_element([0.0, yvertex, 0.0], -1.0, 2*thickness, 3.0, 1.0) 
 #a.create_rectangle_element([-2.45, 2.45, yvertex-mirror_focus, 2.0, -2.0, 0.0], 1.0, [0, 0, 1]) 
 
-for val in numpy.linspace(-2.3, 2.3, 5):
+for val in numpy.linspace(0, 2.3, 3):
     a.create_analysis_plan(z=val)
 
 a.show_elements(False, 'all')
 a.run()
-a.show_elements(True, 'photons')
-#a.show_photons2D('xz')
+#a.show_elements(True, 'photons')
+a.show_photons2D('xy')
