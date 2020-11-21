@@ -13,7 +13,14 @@ class photon():
         self.last_surface = [0, 0, 0]
         self.refraction_count = 0
         self.reflection_count = 0
+
+    def set_attr(self, values):
+        self.pos, self.normal, self.intensity, self.n, self.last_surface, self.refraction_count, self.reflection_count = values
     
+    def get_attr(self):
+        return self.pos, self.normal, self.intensity, self.n, self.last_surface, self.refraction_count, self.reflection_count
+
+
     def reflection(self):
         inc = self.normal
         inc = inc / numpy.linalg.norm(inc)
@@ -136,9 +143,11 @@ class Simu:
             self.normal[1][indexes[0], indexes[1], indexes[2]], 
             self.normal[2][indexes[0], indexes[1], indexes[2]]], self.index[indexes[0], indexes[1], indexes[2]])
 
-    def save_photon(self, photon, index, subindex):
-        self.good_photons.append(photon)
-        self.saved_photons[index].append(photon)
+    def save_photon(self, sphoton, index, subindex):
+        new_photon = photon([0, 0, 0], [0, 0, 1])
+        new_photon.set_attr( sphoton.get_attr() )
+        self.good_photons.append(new_photon)
+        self.saved_photons[index].append(new_photon)
 
     #DEPRECATED. Use show_elements with True instead
     def show_photons3D(self):
@@ -190,27 +199,31 @@ class Simu:
 
 
     def show_elements(self, good_photons=False, mode='all'):
-        xrefl, yrefl, zrefl = numpy.where(self.index==-1.00)
-        xrefr, yrefr, zrefr = numpy.where(self.index>1.00)
-        phx, phy, phz = list(), list(), list()
-        nphx, nphy, nphz = list(), list(), list()
-
-        photon_list = self.good_photons if good_photons else self.photons
-        print(f'We have detected {len(photon_list)} photons.')
-
-        if good_photons:
-            photon_3dlist=self.saved_photons
-        else:
-            photon_list=self.photons
-
+        
         fig = plt.figure()
         ax = plt.axes(projection='3d')
-        
-        for photon in photon_list:
-            ipos = self.pos_to_grid(photon.pos)
-            nor = photon.normal
-            phx.append(ipos[0]); phy.append(ipos[1]); phz.append(ipos[2])
-            nphx.append(nor[0]); nphy.append(nor[1]); nphz.append(nor[2])
+        xrefl, yrefl, zrefl = numpy.where(self.index==-1.00)
+        xrefr, yrefr, zrefr = numpy.where(self.index>1.00)
+
+        def unpack_photons(photon_list):
+            print(f'Unpacking {len(photon_list)} photons.')
+            phx, phy, phz = list(), list(), list()
+            nphx, nphy, nphz = list(), list(), list()
+
+            for photon in photon_list:
+                ipos = self.pos_to_grid(photon.pos)
+                nor = photon.normal
+                phx.append(ipos[0]); phy.append(ipos[1]); phz.append(ipos[2])
+                nphx.append(nor[0]); nphy.append(nor[1]); nphz.append(nor[2])
+            
+            ax.scatter(phx, phz, phy, c='green', label='Source')
+            ax.quiver(phx, phz, phy, nphx, nphz, nphy)
+
+
+        if good_photons:
+            [unpack_photons(photons) for photons in self.saved_photons if photons]
+        else:
+            unpack_photons(self.photons)
         
 
         if mode=='all':
@@ -224,10 +237,6 @@ class Simu:
                         ax.plot_surface(self.x, self.y, 0*self.y+self.pos_to_grid_1D(val, index), color='yellow', alpha=0.5)
                     elif index==2:
                         ax.plot_surface(self.x, 0*self.x+self.pos_to_grid_1D(val, index), self.y, color='yellow', alpha=0.5)
-        if mode=='all' or 'photons':
-            if (self.photons and not good_photons) or (self.good_photons and good_photons):
-                ax.scatter(phx, phz, phy, c='green', label='Source')
-                ax.quiver(phx, phz, phy, nphx, nphz, nphy)
 
         ax.set_xlabel('X')
         ax.set_ylabel('Z')
@@ -407,17 +416,17 @@ mirror_focus = 0.3
 yvertex = 0.5+0.3
 thickness = 1.2
 
-a = Simu(5, 5, 5, 0.1)
-a.d2_source(0.25, -2.5, [0, 0, 1], 0.1, 3)
+a = Simu(5, 5, 5, 0.03)
+a.d2_source(0.25, -2.5, [0, 0, 1], 0.22, 11)
 
-#a.create_sphere_section_element([0, 0, 0.5], 1.0, 1.43, zoff=[-1, 0]) #from 2 to 3.
-#a.create_rectangle_element([-1.0, 1.0, -1.0, 1.0, 0, 0.5], 1.0, [0, 0, 1]) 
+a.create_sphere_section_element([0, 0, 0.5], 1.0, 1.43, zoff=[-1, 0]) #from 2 to 3.
+a.create_rectangle_element([-1.0, 1.0, -1.0, 1.0, 0, 0.5], 1.0, [0, 0, 1]) 
 
 #a.create_parabolic_section_element([0.0, yvertex, 0.0], -1.0, 2*thickness, 3.0, 1.0) 
 #a.create_rectangle_element([-2.45, 2.45, yvertex-mirror_focus, 2.0, -2.0, 0.0], 1.0, [0, 0, 1]) 
 
-a.create_analysis_plan(z=0.8)
-#a.create_analysis_plan(z=2.0)
+for val in numpy.linspace(-2.3, 2.3, 5):
+    a.create_analysis_plan(z=val)
 
 a.show_elements(False, 'all')
 a.run()
