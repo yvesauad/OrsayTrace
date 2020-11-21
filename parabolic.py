@@ -307,35 +307,33 @@ class Simu:
                         self.assign_normal(ind, [(1/pp)*(xpos-x0), (1/pp)*(ypos-y0), 1])
         
 
-    def create_sphere_section_element(self, c, r, n, xoff=[-1, 1], yoff=[-1, 1], zoff=[-1, 1]):
+    def create_sphere_element(self, c, r, n):
+        
+        def assign(pos):
+            xpos, ypos, zpos = pos
+            ind = self.pos_to_grid([xpos, ypos, zpos])
+            self.assign_n(ind, n)
+            self.assign_normal(ind, [xpos-c[0], ypos-c[1], zpos-c[2]])
+
         ss = 2 #sub sampling
-        x = numpy.arange(c[0]-r, c[0]+r+self.res, self.res/ss)
-        y = numpy.arange(c[1]-r, c[1]+r+self.res, self.res/ss)
-        z = numpy.arange(c[2]+zoff[0]*r, c[2]+zoff[1]*r+self.res, self.res/ss)
+        x = numpy.arange(c[0], c[0]+r+self.res, self.res/ss)
+        y = numpy.arange(c[1], c[1]+r+self.res, self.res/ss)
+        z = numpy.arange(c[2], c[2]+r+self.res, self.res/ss)
         for xpos in tqdm(x, desc='Sphere Section'):
             for ypos in y:
                 for zpos in z:
                     d = self.distance([xpos, ypos, zpos], c)
                     if d**2<=(r+self.res)**2:
-                        ind = self.pos_to_grid([xpos, ypos, zpos])
-                        self.assign_n(ind, n)
-                        self.assign_normal(ind, [xpos-c[0], ypos-c[1], zpos-c[2]])
+                        assign([xpos, ypos, zpos])
+                        assign([xpos, -ypos+2*c[1], zpos])
+                        assign([xpos, -ypos+2*c[1], -zpos+2*c[2]])
+                        assign([xpos, ypos, -zpos+2*c[2]])
+                        
+                        assign([-xpos+2*c[0], ypos, zpos])
+                        assign([-xpos+2*c[0], -ypos+2*c[1], zpos])
+                        assign([-xpos+2*c[0], -ypos+2*c[1], -zpos+2*c[2]])
+                        assign([-xpos+2*c[0], ypos, -zpos+2*c[2]])
 
-
-    def create_sphere_element(self, c, r, n):
-        ss = 2 #sub sampling
-        x = numpy.arange(c[0]-r, c[0]+r+self.res, self.res/ss)
-        y = numpy.arange(c[1]-r, c[1]+r+self.res, self.res/ss)
-        z = numpy.arange(c[2]-r, c[2]+r+self.res, self.res/ss)
-        for xi, xpos in enumerate(x):
-            print(f'Creating sphere. '+format(xi/len(x)*100, '.2f')+' %')
-            for ypos in y:
-                for zpos in z:
-                    d = self.distance([xpos, ypos, zpos], c)
-                    if d**2<=(r+self.res)**2:
-                        ind = self.pos_to_grid([xpos, ypos, zpos])
-                        self.assign_n(ind, n)
-                        self.assign_normal(ind, [xpos-c[0], ypos-c[1], zpos-c[2]])
 
     def create_rectangle_element(self, val, n, normal):
         xmin, xmax, ymin, ymax, zmin, zmax = val
@@ -411,11 +409,11 @@ mirror_focus = 0.3
 yvertex = 0.5+0.3
 thickness = 1.2
 
-a = Simu(5, 5, 5, 0.04)
-a.d2_source(0.0, -2.5, [0, 0, 1], 0.32, 71)
+a = Simu(5, 5, 5, 0.03)
+a.d2_source(0.0, -2.5, [0, 0, 1], 0.32, 21)
 
-a.create_sphere_section_element([0, 0, 0.5], 1.0, 1.43, zoff=[-1, 0]) #from 2 to 3.
-a.create_rectangle_element([-1.0, 1.0, -1.0, 1.0, 0.5, 1.0], 1.0, [0, 0, 1]) 
+a.create_sphere_element([0.0, 0.0, 0.5], 1.0, 1.43) #from 2 to 3.
+a.create_rectangle_element([-1.0, 1.0, -1.0, 1.0, 0.5, 2.0], 1.0, [0, 0, 1]) 
 
 #a.create_parabolic_section_element([0.0, yvertex, 0.0], -1.0, 2*thickness, 3.0, 1.0) 
 #a.create_rectangle_element([-2.45, 2.45, yvertex-mirror_focus, 2.0, -2.0, 0.0], 1.0, [0, 0, 1]) 
