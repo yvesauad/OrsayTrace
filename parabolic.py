@@ -11,12 +11,15 @@ class photon_list():
         self.normal = normal / numpy.linalg.norm(normal)
         self.value = value
         self.photons = numpy.asarray([])
+        print(normal, value)
 
-    def add_photons(self, photon):
-        numpy.append(self.photons, photon)
+    def add_photon(self, sphoton):
+        new_photon = photon([0, 0, 0], [0, 0, 1])
+        new_photon.set_attr( sphoton.get_attr() )
+        self.photons = numpy.append(self.photons, new_photon)
 
     def distance_point_to_plane(self, pos):
-        return numpy.abs(numpy.dot(self.normal, pos)+self.value)
+        return numpy.abs(numpy.dot(self.normal, pos)-self.value)
 
 
 
@@ -238,18 +241,18 @@ class Simu:
         xrefl, yrefl, zrefl = self.grid_to_pos(numpy.where(self.index==-1.00))
         xrefr, yrefr, zrefr = self.grid_to_pos(numpy.where(self.index>1.00))
 
-        def unpack_photons(photon_list, index, sindex, value):
+        def unpack_photons(photon_list):
             print(f'Unpacking {len(photon_list)} photons.')
-            title=''
-            if index==0:
-                title='x='
-            elif index==1:
-                title='y='
-            elif index==2:
-                title='z='
-            title+=format(value, '.2f') 
-            if index==-1: #this is for the beginning
-                title='Source'
+            #title=''
+            #if index==0:
+            #    title='x='
+            #elif index==1:
+            #    title='y='
+            #elif index==2:
+            #    title='z='
+            #title+=format(value, '.2f') 
+            #if index==-1: #this is for the beginning
+            #    title='Source'
             
             phx, phy, phz = list(), list(), list()
             nphx, nphy, nphz = list(), list(), list()
@@ -260,13 +263,15 @@ class Simu:
                 phx.append(ipos[0]); phy.append(ipos[1]); phz.append(ipos[2])
                 nphx.append(nor[0]); nphy.append(nor[1]); nphz.append(nor[2])
             
-            ax.scatter(phx, phz, phy, c='green', label=title)
+            ax.scatter(phx, phz, phy, c='green', label='')
             ax.quiver(phx, phz, phy, nphx, nphz, nphy, length=0.5)
 
 
         if good_photons:
-            for index, planes in enumerate(self.saved_photons):
-                [unpack_photons(photons, index, subindex, self.plans[index][subindex]) for subindex, photons in enumerate(planes) if planes]
+            #for index, planes in enumerate(self.saved_photons):
+            #    [unpack_photons(photons) for subindex, photons in enumerate(planes) if planes]
+            for index, photon_list in enumerate(self.photon_lists):
+                unpack_photons(photon_list.photons)
         else:
             unpack_photons(self.photons, -1, 0, 0)
         
@@ -428,16 +433,18 @@ class Simu:
 
     def check_analysis_plan(self, photon):
         pos = photon.pos
-        #for index, values in enumerate(self.plans):
-        #    for subindex, val in enumerate(values):
-        #        if abs(pos[index]-val)<=self.res/2.:
-        #            self.save_photon(photon, index, subindex)
-        #            return True
+        for index, values in enumerate(self.plans):
+            for subindex, val in enumerate(values):
+                if abs(pos[index]-val)<=self.res/2.:
+                    self.save_photon(photon, index, subindex)
+                    return True
         for index, planes in enumerate(self.photon_lists):
-            if planes.distance_point_to_plane(self, pos)
+            if planes.distance_point_to_plane(pos)<=self.res/1.0:
+                planes.add_photon(photon)
+                #print('second list', photon.pos, planes.distance_point_to_plane(pos), planes.value)
 
     def create_analysis_plan(self, normal, value):
-        numpy.append(self.photon_lists, photon_list(normal, value))
+        self.photon_lists = numpy.append(self.photon_lists, photon_list(normal, value))
         if normal==[0, 0, 1]:
             self.plans[2].append(value)
             self.saved_photons[2].append(list())

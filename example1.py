@@ -20,13 +20,12 @@ for z in z_array:
     a.create_analysis_plan([0, 0, 1], z)
 
 
-a.show_elements(False, 'all')
-
-oi
+#a.show_elements(False, 'all')
 
 a.run()
 a.show_elements(True, 'photons')
-a.show_photons2D('xy')
+#a.show_photons2D('xy')
+oi
 
 ### 2ND PART ###
 
