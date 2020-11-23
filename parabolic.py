@@ -101,7 +101,7 @@ class Simu:
     def __init__(self, x, y, z, res):
         self.size = [x, y, z]
         self.res = res
-        self.ss = self.res / 2 #sub sampling for creating elements
+        self.ss = 1. #sub sampling for creating elements
         self.grid = (int(x/res), int(y/res), int(z/res))
         self.index = numpy.ones(self.grid)
         self.normal = numpy.asarray([numpy.zeros(self.grid), numpy.zeros(self.grid), numpy.zeros(self.grid)])
@@ -163,13 +163,22 @@ class Simu:
         self.good_photons.append(new_photon)
         self.saved_photons[index][subindex].append(new_photon)
 
+
     def show_photons2D(self, plan='xy'):
         if 'xz' not in plan and 'xz' not in plan and 'xy' not in plan:
             raise Exception('Please pick either xy, xz or yz as plan.')
         
         
-        def unpack_2d_photons(photon_list, sindex, label='Source'):
+        def unpack_2d_photons(photon_list, index, sindex, value):
             print(f'Unpacking 2D {len(photon_list)} photons.')
+            if index==0:
+                title='x='
+            elif index==1:
+                title='y='
+            elif index==2:
+                title='z='
+            title+=format(value, '.2f')  
+
             phx, phy, phz = list(), list(), list()
             nphx, nphy, nphz = list(), list(), list()
             intensity = list()
@@ -181,9 +190,11 @@ class Simu:
                 nphx.append(nor[0]); nphy.append(nor[1]); nphz.append(nor[2])
                 intensity.append(photon.intensity)
             
-            if plan=='xy': axes[sindex].hist2d(phx, phy, 31, weights = intensity, label='xy')
-            if plan=='xz': axes[sindex].hist2d(phx, phz, 31, weights = intensity, label='xz')
-            if plan=='yz': axes[sindex].hist2d(phy, phz, 31, weights = intensity, label='yz')
+            if plan=='xy': axes[sindex].hist2d(phx, phy, 21, weights = intensity)
+            if plan=='xz': axes[sindex].hist2d(phx, phz, 21, weights = intensity)
+            if plan=='yz': axes[sindex].hist2d(phy, phz, 21, weights = intensity)
+
+            axes[sindex].set_title(title)
         
 
         xlen, ylen, zlen = len(self.saved_photons[0]), len(self.saved_photons[1]), len(self.saved_photons[2])
@@ -196,42 +207,52 @@ class Simu:
         fig, axes = plt.subplots(nrows=1, ncols=maxcols, sharex=False, sharey=False)
 
         for index, planes in enumerate(self.saved_photons):
-            [unpack_2d_photons(photons, subindex, '') for subindex, photons in enumerate(planes) if planes]
+            if planes:
+                for subindex, photons in enumerate(planes):
+                    unpack_2d_photons(photons, index, subindex, self.plans[index][subindex])
+
+            #[unpack_2d_photons(photons, index, subindex, self.plans[index][subindex]) for subindex, photons in enumerate(planes) if planes]
             
         plt.show()
         
-
-
     def show_elements(self, good_photons=False, mode='all'):
         
         fig = plt.figure()
         ax = plt.axes(projection='3d')
         xrefl, yrefl, zrefl = self.grid_to_pos(numpy.where(self.index==-1.00))
-        #xrefl, yrefl, zrefl = numpy.where(self.index==-1.00)
         xrefr, yrefr, zrefr = self.grid_to_pos(numpy.where(self.index>1.00))
-        #xrefr, yrefr, zrefr = numpy.where(self.index>1.00)
 
-        def unpack_photons(photon_list, label='Source'):
+        def unpack_photons(photon_list, index, sindex, value):
             print(f'Unpacking {len(photon_list)} photons.')
+            title=''
+            if index==0:
+                title='x='
+            elif index==1:
+                title='y='
+            elif index==2:
+                title='z='
+            title+=format(value, '.2f') 
+            if index==-1: #this is for the beginning
+                title='Source'
+            
             phx, phy, phz = list(), list(), list()
             nphx, nphy, nphz = list(), list(), list()
 
             for photon in photon_list:
-                #ipos = self.pos_to_grid(photon.pos)
                 ipos = photon.pos
                 nor = photon.normal
                 phx.append(ipos[0]); phy.append(ipos[1]); phz.append(ipos[2])
                 nphx.append(nor[0]); nphy.append(nor[1]); nphz.append(nor[2])
             
-            ax.scatter(phx, phz, phy, c='green', label=label)
+            ax.scatter(phx, phz, phy, c='green', label=title)
             ax.quiver(phx, phz, phy, nphx, nphz, nphy, length=0.5)
 
 
         if good_photons:
             for index, planes in enumerate(self.saved_photons):
-                [unpack_photons(photons, str(subindex)) for subindex, photons in enumerate(planes) if planes]
+                [unpack_photons(photons, index, subindex, self.plans[index][subindex]) for subindex, photons in enumerate(planes) if planes]
         else:
-            unpack_photons(self.photons)
+            unpack_photons(self.photons, -1, 0, 0)
         
 
         if mode=='all':
@@ -240,13 +261,10 @@ class Simu:
             for index, values in enumerate(self.plans):
                 for val in values: #index is if x, y, z. val is the value
                     if index==0:
-                        #ax.plot_surface(0*self.x+self.pos_to_grid_1D(val, index), self.x, self.y, color='yellow', alpha=0.5)
                         ax.plot_surface(0*self.x+val, self.x, self.y, color='yellow', alpha=0.2)
                     elif index==1:
-                        #ax.plot_surface(self.x, self.y, 0*self.y+self.pos_to_grid_1D(val, index), color='yellow', alpha=0.5)
                         ax.plot_surface(self.x, self.y, 0*self.y+val, color='yellow', alpha=0.2)
                     elif index==2:
-                        #ax.plot_surface(self.x, 0*self.x+self.pos_to_grid_1D(val, index), self.y, color='yellow', alpha=0.5)
                         ax.plot_surface(self.x, 0*self.x+val, self.y, color='yellow', alpha=0.2)
 
         ax.set_xlabel('X')
@@ -278,17 +296,16 @@ class Simu:
         #Put the index of refraction of glass in a given region. radius must be inferior than focus/2.
 
         R = focus/2
-        ss = 2 #sub sampling
-        x = numpy.arange(c[0]-radius, c[0]+radius+self.res, self.res/ss)
-        y = numpy.arange(c[1]-radius, c[1]+radius+self.res, self.res/ss)
+        x = numpy.arange(c[0]-radius, c[0]+radius+self.res, self.res/self.ss)
+        y = numpy.arange(c[1]-radius, c[1]+radius+self.res, self.res/self.ss)
         if e>R or e<0:
             raise Exception('Lens too thick or negative number. Please reduce it')
         if dir:
             print('Plane-Convex Lens')
-            z = numpy.arange(c[2]+e, c[2]+R+self.res, self.res/ss)
+            z = numpy.arange(c[2]+e, c[2]+R+self.res, self.res/self.ss)
         else:
             print('Convex-Plane Lens')
-            z = numpy.arange(c[2]-R, c[2]-e, self.res/ss)
+            z = numpy.arange(c[2]-R, c[2]-e, self.res/self.ss)
         
         for xi, xpos in enumerate(x):
             for ypos in y:
@@ -307,7 +324,6 @@ class Simu:
 
 
     def create_parabolic_section_element(self, c, n, th, wid, pp):
-        ss=2
         x0, y0, z0 = c
         #th is thickness and it is related to y. ysym of 0.5 means a symmetric with respect to Z. Thickness is
         #this whole value in z. If ysym is 0, thickness is related to the semi parabola in negative y's. Same
@@ -320,9 +336,9 @@ class Simu:
         
         zmax = z0
         zmin = z0 - (1/2*pp)*(max(abs(ymax-y0), abs(ymin-y0))**2+max(abs(xmax-x0), abs(xmin-x0))**2)
-        x = numpy.arange(xmin, xmax+self.res, self.res/ss)
-        y = numpy.arange(ymin, ymax+self.res, self.res/ss)
-        z = numpy.arange(zmin, zmax+self.res, self.res/ss)
+        x = numpy.arange(xmin, xmax+self.res, self.res/self.ss)
+        y = numpy.arange(ymin, ymax+self.res, self.res/self.ss)
+        z = numpy.arange(zmin, zmax+self.res, self.res/self.ss)
         for xpos in tqdm(x, desc='Parabolic'):
             for ypos in y:
                 for zpos in z:
@@ -340,10 +356,9 @@ class Simu:
             self.assign_n(ind, n)
             self.assign_normal(ind, [xpos-c[0], ypos-c[1], zpos-c[2]])
 
-        ss = 2 #sub sampling
-        x = numpy.arange(c[0], c[0]+r+self.res, self.res/ss)
-        y = numpy.arange(c[1], c[1]+r+self.res, self.res/ss)
-        z = numpy.arange(c[2], c[2]+r+self.res, self.res/ss)
+        x = numpy.arange(c[0], c[0]+r+self.res, self.res/self.ss)
+        y = numpy.arange(c[1], c[1]+r+self.res, self.res/self.ss)
+        z = numpy.arange(c[2], c[2]+r+self.res, self.res/self.ss)
         for xpos in tqdm(x, desc='Sphere Section'):
             for ypos in y:
                 for zpos in z:
@@ -360,12 +375,15 @@ class Simu:
                         assign([-xpos+2*c[0], ypos, -zpos+2*c[2]])
 
 
-    def create_rectangle_element(self, val, n, normal):
+    def create_rectangle_element(self, val, n, normal, inclusive=True):
+        if inclusive:
+            fac = 1
+        else:
+            fac = 0
         xmin, xmax, ymin, ymax, zmin, zmax = val
-        ss = 2 #sub sampling
-        x = numpy.arange(xmin, xmax+self.res, self.res/ss)
-        y = numpy.arange(ymin, ymax+self.res, self.res/ss)
-        z = numpy.arange(zmin, zmax+self.res, self.res/ss)
+        x = numpy.arange(xmin, xmax+fac*self.res, self.res/self.ss)
+        y = numpy.arange(ymin, ymax+fac*self.res, self.res/self.ss)
+        z = numpy.arange(zmin, zmax+fac*self.res, self.res/self.ss)
         for xpos in tqdm(x, desc='Rectangle'):
             for ypos in y:
                 for zpos in z:
