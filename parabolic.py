@@ -77,7 +77,6 @@ class photon():
             self.normal = refr
         
         self.n = n2 #now photon index of refraction
-        #print(self.refraction_count, inc, sur_normal, refr)
         return True
 
     def move(self, value):
@@ -109,8 +108,8 @@ class Simu:
         self.photons = list()
         self.good_photons = list()
         self.plans=[list(), list(), list()]
-        self.x = numpy.linspace(0, int(x/res))
-        self.y = numpy.linspace(0, int(y/res))
+        self.x = numpy.linspace(-self.size[0]/2., self.size[0]/2., self.grid[0])
+        self.y = numpy.linspace(-self.size[1]/2., self.size[1]/2., self.grid[1])
         self.x, self.y = numpy.meshgrid(self.x, self.y)
         self.saved_photons=[list(), list(), list()]
 
@@ -131,6 +130,10 @@ class Simu:
 
         indexes = [int((pos[i]/(self.size[i]/2.)+1)/2*self.grid[i]) for i in range(3)]
         return indexes
+
+    def grid_to_pos(self, grid):
+        pos = [ (2.0*grid[i]/self.grid[i]-1) * self.size[i]/2.0 for i in range(3)]
+        return pos
 
     def index_from_pos(self, pos):
         #this returns current index of refraction of a given photon in a given position
@@ -203,8 +206,10 @@ class Simu:
         
         fig = plt.figure()
         ax = plt.axes(projection='3d')
-        xrefl, yrefl, zrefl = numpy.where(self.index==-1.00)
-        xrefr, yrefr, zrefr = numpy.where(self.index>1.00)
+        xrefl, yrefl, zrefl = self.grid_to_pos(numpy.where(self.index==-1.00))
+        #xrefl, yrefl, zrefl = numpy.where(self.index==-1.00)
+        xrefr, yrefr, zrefr = self.grid_to_pos(numpy.where(self.index>1.00))
+        #xrefr, yrefr, zrefr = numpy.where(self.index>1.00)
 
         def unpack_photons(photon_list, label='Source'):
             print(f'Unpacking {len(photon_list)} photons.')
@@ -212,13 +217,14 @@ class Simu:
             nphx, nphy, nphz = list(), list(), list()
 
             for photon in photon_list:
-                ipos = self.pos_to_grid(photon.pos)
+                #ipos = self.pos_to_grid(photon.pos)
+                ipos = photon.pos
                 nor = photon.normal
                 phx.append(ipos[0]); phy.append(ipos[1]); phz.append(ipos[2])
                 nphx.append(nor[0]); nphy.append(nor[1]); nphz.append(nor[2])
             
             ax.scatter(phx, phz, phy, c='green', label=label)
-            ax.quiver(phx, phz, phy, nphx, nphz, nphy)
+            ax.quiver(phx, phz, phy, nphx, nphz, nphy, length=0.5)
 
 
         if good_photons:
@@ -234,15 +240,24 @@ class Simu:
             for index, values in enumerate(self.plans):
                 for val in values: #index is if x, y, z. val is the value
                     if index==0:
-                        ax.plot_surface(0*self.x+self.pos_to_grid_1D(val, index), self.x, self.y, color='yellow', alpha=0.5)
+                        #ax.plot_surface(0*self.x+self.pos_to_grid_1D(val, index), self.x, self.y, color='yellow', alpha=0.5)
+                        ax.plot_surface(0*self.x+val, self.x, self.y, color='yellow', alpha=0.2)
                     elif index==1:
-                        ax.plot_surface(self.x, self.y, 0*self.y+self.pos_to_grid_1D(val, index), color='yellow', alpha=0.5)
+                        #ax.plot_surface(self.x, self.y, 0*self.y+self.pos_to_grid_1D(val, index), color='yellow', alpha=0.5)
+                        ax.plot_surface(self.x, self.y, 0*self.y+val, color='yellow', alpha=0.2)
                     elif index==2:
-                        ax.plot_surface(self.x, 0*self.x+self.pos_to_grid_1D(val, index), self.y, color='yellow', alpha=0.5)
+                        #ax.plot_surface(self.x, 0*self.x+self.pos_to_grid_1D(val, index), self.y, color='yellow', alpha=0.5)
+                        ax.plot_surface(self.x, 0*self.x+val, self.y, color='yellow', alpha=0.2)
 
         ax.set_xlabel('X')
+        ax.set_xlim(-self.size[0]/2.0, self.size[0]/2.0)
+        
         ax.set_ylabel('Z')
-        ax.set_zlabel('Y')
+        ax.set_ylim(-self.size[2]/2.0, self.size[2]/2.0)
+       
+        ax.set_zlabel('Y') 
+        ax.set_zlim(-self.size[1]/2.0, self.size[1]/2.0)
+        
         plt.legend()
         plt.show()
 
@@ -357,7 +372,6 @@ class Simu:
                     ind = self.pos_to_grid([xpos, ypos, zpos])
                     self.assign_n(ind, n)
                     self.assign_normal(ind, normal)
-
 
     def distance(self, vec1, vec2):
         return numpy.sum(numpy.power(numpy.subtract(vec1, vec2), 2))**0.5
