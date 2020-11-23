@@ -409,19 +409,19 @@ mirror_focus = 0.3
 yvertex = 0.5+0.3
 thickness = 1.2
 
-a = Simu(5, 5, 5, 0.03)
-a.d2_source(0.0, -2.5, [0, 0, 1], 0.32, 21)
+#a = Simu(5, 5, 5, 0.03)
+#a.d2_source(0.0, -2.5, [0, 0, 1], 0.32, 21)
 
-a.create_sphere_element([0.0, 0.0, 0.5], 1.0, 1.43) #from 2 to 3.
-a.create_rectangle_element([-1.0, 1.0, -1.0, 1.0, 0.5, 2.0], 1.0, [0, 0, 1]) 
+#a.create_sphere_element([0.0, 0.0, 0.5], 1.0, 1.43) #from 2 to 3.
+#a.create_rectangle_element([-1.0, 1.0, -1.0, 1.0, 0.5, 2.0], 1.0, [0, 0, 1]) 
 
 #a.create_parabolic_section_element([0.0, yvertex, 0.0], -1.0, 2*thickness, 3.0, 1.0) 
 #a.create_rectangle_element([-2.45, 2.45, yvertex-mirror_focus, 2.0, -2.0, 0.0], 1.0, [0, 0, 1]) 
 
-for val in numpy.linspace(0, 2.3, 3):
-    a.create_analysis_plan(z=val)
+#for val in numpy.linspace(0, 2.3, 3):
+#    a.create_analysis_plan(z=val)
 
-a.show_elements(False, 'all')
-a.run()
+#a.show_elements(False, 'all')
+#a.run()
 #a.show_elements(True, 'photons')
-a.show_photons2D('xy')
+#a.show_photons2D('xy')
