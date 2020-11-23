@@ -43,8 +43,15 @@ class photon():
         r = self.n/n2
         inc = self.normal
         inc = inc / numpy.linalg.norm(inc)
+        
         sur_normal = self.last_surface
+        
+        if sur_normal==[0, 0, 0]:
+            print('***WARNING***: No surface normal.')
+            return False
+
         sur_normal = sur_normal / numpy.linalg.norm(sur_normal)
+        
         cos_ang1 = -numpy.dot(inc, sur_normal)
         if cos_ang1<0:
             sur_normal = -sur_normal #adjust surface normal
@@ -70,6 +77,7 @@ class photon():
             self.normal = refr
         
         self.n = n2 #now photon index of refraction
+        #print(self.refraction_count, inc, sur_normal, refr)
         return True
 
     def move(self, value):
@@ -78,6 +86,7 @@ class photon():
 
     def update(self, value):
         sur_normal, index = value
+        
         if sur_normal != [0, 0, 0]:
             self.last_surface = sur_normal
         
@@ -85,6 +94,7 @@ class photon():
             self.refraction(index)
         elif index==-1:
             self.reflection()
+        
 
         return True
 
