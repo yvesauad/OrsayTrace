@@ -5,6 +5,21 @@ from matplotlib.widgets import Slider
 import time
 from tqdm import tqdm
 
+
+class photon_list():
+    def __init__(self, normal, value):
+        self.normal = normal / numpy.linalg.norm(normal)
+        self.value = value
+        self.photons = numpy.asarray([])
+
+    def add_photons(self, photon):
+        numpy.append(self.photons, photon)
+
+    def distance_point_to_plane(self, pos):
+        return numpy.abs(numpy.dot(self.normal, pos)+self.value)
+
+
+
 class photon():
     def __init__(self, pos, normal, intensity=1.):
         self.pos = pos
@@ -108,10 +123,11 @@ class Simu:
         self.photons = list()
         self.good_photons = list()
         self.plans=[list(), list(), list()]
+        self.saved_photons=[list(), list(), list()]
+        self.photon_lists=numpy.asarray([])
         self.x = numpy.linspace(-self.size[0]/2., self.size[0]/2., self.grid[0])
         self.y = numpy.linspace(-self.size[1]/2., self.size[1]/2., self.grid[1])
         self.x, self.y = numpy.meshgrid(self.x, self.y)
-        self.saved_photons=[list(), list(), list()]
 
     def assign_normal(self, index, normal):
         self.normal[0][index[0], index[1], index[2]] = normal[0]
@@ -412,21 +428,24 @@ class Simu:
 
     def check_analysis_plan(self, photon):
         pos = photon.pos
-        for index, values in enumerate(self.plans):
-            for subindex, val in enumerate(values):
-                if abs(pos[index]-val)<=self.res/2.:
-                    self.save_photon(photon, index, subindex)
-                    return True
+        #for index, values in enumerate(self.plans):
+        #    for subindex, val in enumerate(values):
+        #        if abs(pos[index]-val)<=self.res/2.:
+        #            self.save_photon(photon, index, subindex)
+        #            return True
+        for index, planes in enumerate(self.photon_lists):
+            if planes.distance_point_to_plane(self, pos)
 
-    def create_analysis_plan(self, **kargs):
-        if 'z' in kargs:
-            self.plans[2].append(kargs['z'])
+    def create_analysis_plan(self, normal, value):
+        numpy.append(self.photon_lists, photon_list(normal, value))
+        if normal==[0, 0, 1]:
+            self.plans[2].append(value)
             self.saved_photons[2].append(list())
-        if 'y' in kargs:
-            self.plans[1].append(kargs['y'])
+        if normal==[0, 1, 0]:
+            self.plans[1].append(value)
             self.saved_photons[1].append(list())
-        if 'x' in kargs:
-            self.plans[0].append(kargs['x'])
+        if normal==[1, 0, 0]:
+            self.plans[0].append(value)
             self.saved_photons[0].append(list())
 
 

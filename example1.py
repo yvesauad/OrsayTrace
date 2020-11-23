@@ -17,10 +17,13 @@ a.create_rectangle_element([-1.1, 1.1, -1.1, 1.1, lens_pos, lens_pos], 1.43, [0,
 
 
 for z in z_array:
-    a.create_analysis_plan(z=z)
+    a.create_analysis_plan([0, 0, 1], z)
 
 
 a.show_elements(False, 'all')
+
+oi
+
 a.run()
 a.show_elements(True, 'photons')
 a.show_photons2D('xy')
