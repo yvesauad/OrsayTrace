@@ -11,8 +11,9 @@ res = 0.05
 a = ot.Simu(5, 5, 10, res)
 
 #Plane convex lens. Source is point source diverging.
-a.d2_source(0.0, [0, 0, -5.0], [0, 0, 1], 0.12, 31)
-a.d2_source(0.0, [1.0, 0.0, -5.0], [0, 0, 1], 0.12, 31)
+a.d2_source(0.20, [0, 0, -5.0], [0, 0, 1], 0.0, 1)
+a.d2_source(0.20, [0, 1.0, -5.0], [0, 0, 1], 0.55, 3)
+a.d2_source(0.0, [1.0, 0.0, -5.0], [0, 0, 1], 0.12, 3)
 #a.d2_source(0.0, [1.0, 1.0, -5.0], [0, 0, 1], 0.12, 31)
 #a.create_sphere_element([0.0, 0.0, lens_pos], f/2., 1.43) #from 2 to 3.
 #a.create_rectangle_element([-1.1, 1.1, -1.1, 1.1, lens_pos-f, lens_pos], 1.0, [0, 0, 1], inclusive=False)

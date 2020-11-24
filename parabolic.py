@@ -4,6 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.widgets import Slider
 import time
 from tqdm import tqdm
+from concurrent.futures import ProcessPoolExecutor
 
 
 class photon_list():
@@ -278,15 +279,18 @@ class Simu:
     def d2_source(self, r, c=[0, 0, 0], normal=[0, 0, 1], na = 0.12, angles=1):
         xc, yc, zc = c
         x = numpy.arange(xc-r, xc+r, self.res)
+        y = numpy.arange(yc-r, yc+r, self.res)
         if not x.size>0:
-            x=[0]
+            x=[xc]
+            y=[yc]
         naper = numpy.linspace(-na, na, angles)
         for xpos in tqdm(x, desc='Source'):
-            for ypos in numpy.arange(-numpy.sqrt(r**2-(xpos-xc)**2), numpy.sqrt(r**2-(xpos-xc)**2)+self.res, self.res):
-                for nax in naper:
-                    for nay in naper:
-                        normal2 = numpy.add(normal, numpy.multiply([1, 1, 0], [nax, nay, 0]))
-                        self.photons.append(photon([xpos, ypos, zc], normal2))
+            for ypos in y:
+                if (xpos-xc)**2+(ypos-yc)**2<=r**2:
+                    for nax in naper:
+                        for nay in naper:
+                            normal2 = numpy.add(normal, numpy.multiply([1, 1, 0], [nax, nay, 0]))
+                            self.photons.append(photon([xpos, ypos, zc], normal2))
 
     def create_parabolic_section_element(self, c, n, th, wid, pp):
         x0, y0, z0 = c
@@ -369,29 +373,32 @@ class Simu:
     def check_analysis_plan(self, photon):
         pos = photon.pos
         for index, planes in enumerate(self.photon_lists):
-            if planes.distance_point_to_plane(pos)<=self.res/2.0:
+            if planes.distance_point_to_plane(pos)<=self.res/1.0:
                 planes.add_photon(photon)
 
     def create_analysis_plan(self, normal, value):
         self.photon_lists = numpy.append(self.photon_lists, photon_list(normal, value))
+    
+    def run_photon(self, photon):
+        while True:
+            photon.update(self.normal_and_index_from_pos(photon.pos))
+            photon.move(self.res)   
+            if not self.check_position(photon):
+                self.photons.remove(photon)
+                break
+            self.check_analysis_plan(photon)
 
 
     def run(self):
-        i = 0
-        while self.photons:
-            i = i + 1
-            #print(f'Interaction {i}. Number of photons in the simu is {len(self.photons)}')
-            for photon in tqdm(self.photons, desc='Running', ascii=True, ncols=100):
-                
-                photon.update(self.normal_and_index_from_pos(photon.pos))
-                photon.move(self.res)
-                
-                if not self.check_position(photon):
-                    self.photons.remove(photon)
-                elif self.check_analysis_plan(photon):
-                    pass
-                    #self.save_photon(photon, ind, subind)
-                    #self.photons.remove(photon)
+        #executor = ProcessPoolExecutor(max_workers=3)
+        start=time.time()
+        #while self.photons:
+            #for photon in tqdm(self.photons, desc='Running', ascii=True, ncols=100):
+        for photon in self.photons:
+            self.run_photon(photon)
+                #executor.submit(self.run_photon(photon))
+        print(time.time()-start)
+
 
 mirror_focus = 0.3
 yvertex = 0.5+0.3
