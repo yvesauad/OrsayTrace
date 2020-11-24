@@ -23,6 +23,9 @@ a.show_elements(False, 'all')
 a.run()
 a.show_elements(True, 'photons')
 
+
+oioi
+
 ### 2ND PART ###
 
 a = ot.Simu(5, 5, 10, res)
@@ -40,6 +43,7 @@ for z in z_array:
 a.show_elements(False, 'all')
 a.run()
 a.show_elements(True, 'photons')
+
 
 ### 3RD PART ###
 

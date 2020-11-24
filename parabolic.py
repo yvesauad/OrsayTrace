@@ -5,6 +5,7 @@ from matplotlib.widgets import Slider
 import time
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 
 class photon_list():
@@ -20,6 +21,12 @@ class photon_list():
 
     def distance_point_to_plane(self, pos):
         return numpy.abs(numpy.dot(self.normal, pos)-self.value)
+
+    def add_symmetric_xphoton(self, sphoton):
+        new_photon = photon([0, 0, 0], [0, 0, 1])
+        new_photon.set_attr( sphoton.get_attr() )
+        new_photon.pos = -new_photon.pos[0], new_photon.pos[1], new_photon.pos[2]
+        self.photons = numpy.append(self.photons, new_photon)
 
 
 
@@ -373,31 +380,44 @@ class Simu:
     def check_analysis_plan(self, photon):
         pos = photon.pos
         for index, planes in enumerate(self.photon_lists):
-            if planes.distance_point_to_plane(pos)<=self.res/1.0:
+            if planes.distance_point_to_plane(pos)<=self.res/2.0:
                 planes.add_photon(photon)
 
     def create_analysis_plan(self, normal, value):
         self.photon_lists = numpy.append(self.photon_lists, photon_list(normal, value))
     
-    def run_photon(self, photon):
-        while True:
-            photon.update(self.normal_and_index_from_pos(photon.pos))
-            photon.move(self.res)   
-            if not self.check_position(photon):
-                self.photons.remove(photon)
-                break
-            self.check_analysis_plan(photon)
+    def run_photon(self, photon_list, index):
+        for photon in tqdm(photon_list, desc=f'Running'):
+            while True:
+                photon.update(self.normal_and_index_from_pos(photon.pos))
+                photon.move(self.res)   
+                if not self.check_position(photon):
+                    self.photons[index] = [photons for photons in self.photons[index] if photons!=photon]
+                    break
+                self.check_analysis_plan(photon)
 
 
-    def run(self):
-        #executor = ProcessPoolExecutor(max_workers=3)
-        start=time.time()
-        #while self.photons:
-            #for photon in tqdm(self.photons, desc='Running', ascii=True, ncols=100):
-        for photon in self.photons:
-            self.run_photon(photon)
-                #executor.submit(self.run_photon(photon))
-        print(time.time()-start)
+    def run(self, symx=True):
+        n = 1
+
+        if symx:
+            self.photons = [photons for photons in self.photons if (photons.pos[0]>=0. and numpy.dot(photons.normal, [1, 0, 0])>=0.)]
+
+
+        self.photons = numpy.asarray(self.photons)
+        self.photons = numpy.array_split(self.photons, n)
+
+        #with ThreadPoolExecutor(max_workers=n) as executor:
+        for list_number, splited_lists in enumerate(self.photons):
+            #future = executor.submit(self.run_photon, splited_lists)
+            self.run_photon(splited_lists, list_number)
+
+        for index, photon_list in enumerate(self.photon_lists):
+        #    print(len(photon_list))
+            print(len(self.photon_lists))
+        #    for photon in photon_list:
+        #        self.photons_lists[index].add_symmetric_xphoton(photon)
+
 
 
 mirror_focus = 0.3
