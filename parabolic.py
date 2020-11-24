@@ -11,7 +11,6 @@ class photon_list():
         self.normal = normal / numpy.linalg.norm(normal)
         self.value = value
         self.photons = numpy.asarray([])
-        print(normal, value)
 
     def add_photon(self, sphoton):
         new_photon = photon([0, 0, 0], [0, 0, 1])
@@ -95,6 +94,7 @@ class photon():
             self.normal = refr
         
         self.n = n2 #now photon index of refraction
+        #print(self.refraction_count, inc, sur_normal, self.n)
         return True
 
     def move(self, value):
@@ -119,7 +119,7 @@ class Simu:
     def __init__(self, x, y, z, res):
         self.size = [x, y, z]
         self.res = res
-        self.ss = 1. #sub sampling for creating elements
+        self.ss = 2. #sub sampling for creating elements
         self.grid = (int(x/res), int(y/res), int(z/res))
         self.index = numpy.ones(self.grid)
         self.normal = numpy.asarray([numpy.zeros(self.grid), numpy.zeros(self.grid), numpy.zeros(self.grid)])
@@ -188,21 +188,14 @@ class Simu:
             raise Exception('Please pick either xy, xz or yz as plan.')
         
         
-        def unpack_2d_photons(photon_list, index, sindex, value):
-            print(f'Unpacking 2D {len(photon_list)} photons.')
-            if index==0:
-                title='x='
-            elif index==1:
-                title='y='
-            elif index==2:
-                title='z='
-            title+=format(value, '.2f')  
-
+        def unpack_2d_photons(photon_list, sindex):
+            print(f'Unpacking 2D {len(photon_list.photons)} photons.')
+            
             phx, phy, phz = list(), list(), list()
             nphx, nphy, nphz = list(), list(), list()
             intensity = list()
 
-            for photon in photon_list:
+            for photon in photon_list.photons:
                 ipos = (photon.pos)
                 nor = photon.normal
                 phx.append(ipos[0]); phy.append(ipos[1]); phz.append(ipos[2])
@@ -213,25 +206,14 @@ class Simu:
             if plan=='xz': axes[sindex].hist2d(phx, phz, 21, weights = intensity)
             if plan=='yz': axes[sindex].hist2d(phy, phz, 21, weights = intensity)
 
-            axes[sindex].set_title(title)
-        
+            #axes[sindex].set_title(str(photon_list.normal)+'_'+str(photon_list.value))
+            axes[sindex].set_title(str(photon_list.value))
 
-        xlen, ylen, zlen = len(self.saved_photons[0]), len(self.saved_photons[1]), len(self.saved_photons[2])
-        if xlen*ylen!=0 and xlen*zlen!=0 and ylen*zlen!=0:
-            if max(xlen, ylen, zlen)==0:
-                raise Exception('Only a single index is supported by now. Please put your plans in same dimension.')
-
-        maxcols = max(xlen, ylen, zlen)
-
-        fig, axes = plt.subplots(nrows=1, ncols=maxcols, sharex=False, sharey=False)
-
-        for index, planes in enumerate(self.saved_photons):
-            if planes:
-                for subindex, photons in enumerate(planes):
-                    unpack_2d_photons(photons, index, subindex, self.plans[index][subindex])
-
-            #[unpack_2d_photons(photons, index, subindex, self.plans[index][subindex]) for subindex, photons in enumerate(planes) if planes]
+        fig, axes = plt.subplots(nrows=1, ncols=len(self.photon_lists), sharex=False, sharey=False)
             
+        for index, photon_list in enumerate(self.photon_lists):
+            unpack_2d_photons(photon_list, index)
+
         plt.show()
         
     def show_elements(self, good_photons=False, mode='all'):
@@ -242,17 +224,13 @@ class Simu:
         xrefr, yrefr, zrefr = self.grid_to_pos(numpy.where(self.index>1.00))
 
         def unpack_photons(photon_list):
+            if hasattr(photon_list, 'photons'):
+                title = 'PN: '+str(photon_list.normal)+'. d= '+format(photon_list.value, '.2f')
+                photon_list = photon_list.photons
+            else:
+                title = 'Photons'
+            
             print(f'Unpacking {len(photon_list)} photons.')
-            #title=''
-            #if index==0:
-            #    title='x='
-            #elif index==1:
-            #    title='y='
-            #elif index==2:
-            #    title='z='
-            #title+=format(value, '.2f') 
-            #if index==-1: #this is for the beginning
-            #    title='Source'
             
             phx, phy, phz = list(), list(), list()
             nphx, nphy, nphz = list(), list(), list()
@@ -263,30 +241,22 @@ class Simu:
                 phx.append(ipos[0]); phy.append(ipos[1]); phz.append(ipos[2])
                 nphx.append(nor[0]); nphy.append(nor[1]); nphz.append(nor[2])
             
-            ax.scatter(phx, phz, phy, c='green', label='')
+            ax.scatter(phx, phz, phy, c='green', label=title)
             ax.quiver(phx, phz, phy, nphx, nphz, nphy, length=0.5)
 
 
         if good_photons:
-            #for index, planes in enumerate(self.saved_photons):
-            #    [unpack_photons(photons) for subindex, photons in enumerate(planes) if planes]
             for index, photon_list in enumerate(self.photon_lists):
-                unpack_photons(photon_list.photons)
+                unpack_photons(photon_list)
         else:
-            unpack_photons(self.photons, -1, 0, 0)
+            unpack_photons(self.photons)
         
 
         if mode=='all':
             if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Refractive')
             if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Reflective')
-            for index, values in enumerate(self.plans):
-                for val in values: #index is if x, y, z. val is the value
-                    if index==0:
-                        ax.plot_surface(0*self.x+val, self.x, self.y, color='yellow', alpha=0.2)
-                    elif index==1:
-                        ax.plot_surface(self.x, self.y, 0*self.y+val, color='yellow', alpha=0.2)
-                    elif index==2:
-                        ax.plot_surface(self.x, 0*self.x+val, self.y, color='yellow', alpha=0.2)
+            for index, photon_list in enumerate(self.photon_lists):
+                ax.plot_surface(self.x, (photon_list.value-photon_list.normal[0]*self.x-photon_list.normal[1]*self.y)/photon_list.normal[2], self.y, color='yellow', alpha=0.2)
 
         ax.set_xlabel('X')
         ax.set_xlim(-self.size[0]/2.0, self.size[0]/2.0)
@@ -311,38 +281,6 @@ class Simu:
                     for nay in naper:
                         normal2 = numpy.add(normal, numpy.multiply([1, 1, 0], [nax, nay, 0]))
                         self.photons.append(photon([xpos, ypos, z], normal2))
-
-
-    def convergent_lens(self, c=[0, 0, 3.0], e=0.0, radius=0.4, focus=2.0, n=1.43, dir = 0):
-        #Put the index of refraction of glass in a given region. radius must be inferior than focus/2.
-
-        R = focus/2
-        x = numpy.arange(c[0]-radius, c[0]+radius+self.res, self.res/self.ss)
-        y = numpy.arange(c[1]-radius, c[1]+radius+self.res, self.res/self.ss)
-        if e>R or e<0:
-            raise Exception('Lens too thick or negative number. Please reduce it')
-        if dir:
-            print('Plane-Convex Lens')
-            z = numpy.arange(c[2]+e, c[2]+R+self.res, self.res/self.ss)
-        else:
-            print('Convex-Plane Lens')
-            z = numpy.arange(c[2]-R, c[2]-e, self.res/self.ss)
-        
-        for xi, xpos in enumerate(x):
-            for ypos in y:
-                for zpos in z:
-                    d = self.distance([xpos, ypos, zpos], c)
-                    d1 = self.distance([xpos, ypos], [c[0], c[1]])
-                    d2 = self.distance(zpos, c[2]+e) if dir else self.distance(zpos, c[2]-e) 
-                    if d1**2<=radius**2:
-                        if d**2<=(R+self.res)**2 or d2<=self.res:
-                            ind = self.pos_to_grid([xpos, ypos, zpos])
-                            self.assign_n(ind, n)
-                            if d2<=self.res:
-                                self.assign_normal(ind, [0, 0, -1])
-                            else:
-                                self.assign_normal(ind, [xpos-c[0], ypos-c[1], zpos-c[2]])
-
 
     def create_parabolic_section_element(self, c, n, th, wid, pp):
         x0, y0, z0 = c
@@ -422,38 +360,14 @@ class Simu:
         else:
             return False
 
-    def check_plane(self, photon, plane):
-        xp, yp, zp = plane
-        pos = photon.pos
-        #if yp-self.res/2.<pos[1]<yp+self.res/2.:
-        if zp-self.res/2.<pos[2]<zp+self.res/2.:
-            return True
-        else:
-            return False
-
     def check_analysis_plan(self, photon):
         pos = photon.pos
-        for index, values in enumerate(self.plans):
-            for subindex, val in enumerate(values):
-                if abs(pos[index]-val)<=self.res/2.:
-                    self.save_photon(photon, index, subindex)
-                    return True
         for index, planes in enumerate(self.photon_lists):
             if planes.distance_point_to_plane(pos)<=self.res/1.0:
                 planes.add_photon(photon)
-                #print('second list', photon.pos, planes.distance_point_to_plane(pos), planes.value)
 
     def create_analysis_plan(self, normal, value):
         self.photon_lists = numpy.append(self.photon_lists, photon_list(normal, value))
-        if normal==[0, 0, 1]:
-            self.plans[2].append(value)
-            self.saved_photons[2].append(list())
-        if normal==[0, 1, 0]:
-            self.plans[1].append(value)
-            self.saved_photons[1].append(list())
-        if normal==[1, 0, 0]:
-            self.plans[0].append(value)
-            self.saved_photons[0].append(list())
 
 
     def run(self):
