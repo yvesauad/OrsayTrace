@@ -36,7 +36,17 @@ class photon_list():
         new_photon.normal = new_photon.normal[0], -new_photon.normal[1], new_photon.normal[2]
         self.photons = numpy.append(self.photons, new_photon)
 
+    def avg_divergence(self, normal_ref):
+        vals = numpy.average([numpy.dot(photon.normal, normal_ref)**2 for photon in self.photons])
+        return vals
 
+    def avg_distance_axis_z(self, c=[0, 0]):
+        vals = numpy.average([numpy.sqrt((photon.pos[0]-c[0])**2+(photon.pos[1]-c[1])**2) for photon in self.photons])
+        return vals
+    
+    def avg_position_axis(self, axis=0):
+        vals = numpy.average([photon.pos[axis] for photon in self.photons])
+        return vals
 
 class photon():
     def __init__(self, pos, normal, intensity=1.):
@@ -232,6 +242,7 @@ class Simu:
             if hasattr(photon_list, 'photons'):
                 title = 'PN: '+str(photon_list.normal)+'. d= '+format(photon_list.value, '.2f')
                 photon_list = photon_list.photons
+                title = ''
             else:
                 title = 'Photons'
             
@@ -257,11 +268,12 @@ class Simu:
             unpack_photons(self.photons)
         
 
-        if mode=='all':
+        if 'all' in mode:
             if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Refractive')
             if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Reflective')
-            for index, photon_list in enumerate(self.photon_lists):
-                ax.plot_surface(self.x, (photon_list.value-photon_list.normal[0]*self.x-photon_list.normal[1]*self.y)/photon_list.normal[2], self.y, color='yellow', alpha=0.2)
+            if '-noplan' not in mode:
+                for index, photon_list in enumerate(self.photon_lists):
+                    ax.plot_surface(self.x, (photon_list.value-photon_list.normal[0]*self.x-photon_list.normal[1]*self.y)/photon_list.normal[2], self.y, color='yellow', alpha=0.2)
 
         ax.set_xlabel('X')
         ax.set_xlim(-self.size[0]/2.0, self.size[0]/2.0)
@@ -293,8 +305,8 @@ class Simu:
 
     def d2_source(self, r, c=[0, 0, 0], normal=[0, 0, 1], na = 0.12, angles=1):
         xc, yc, zc = c
-        x = numpy.arange(xc-r, xc+r, self.res)
-        y = numpy.arange(yc-r, yc+r, self.res)
+        x = numpy.arange(xc-r, xc+self.res, self.res)
+        y = numpy.arange(yc-r, yc+self.res, self.res)
         if not x.size>0:
             x=[xc]
             y=[yc]
@@ -306,6 +318,9 @@ class Simu:
                         for nay in naper:
                             normal2 = numpy.add(normal, numpy.multiply([1, 1, 0], [nax, nay, 0]))
                             self.photons.append(photon([xpos, ypos, zc], normal2))
+                            self.photons.append(photon([-xpos, ypos, zc], normal2))
+                            self.photons.append(photon([xpos, -ypos, zc], normal2))
+                            self.photons.append(photon([-xpos, -ypos, zc], normal2))
 
     def create_parabolic_section_element(self, c, n, th, wid, pp):
         x0, y0, z0 = c
@@ -430,6 +445,8 @@ class Simu:
         for index, photon_list in enumerate(self.photon_lists):
             for photon in photon_list.photons:
                 if ysym: self.photon_lists[index].add_symmetric_yphoton(photon)
+
+        return self.photon_lists
 
 
 
