@@ -26,6 +26,14 @@ class photon_list():
         new_photon = photon([0, 0, 0], [0, 0, 1])
         new_photon.set_attr( sphoton.get_attr() )
         new_photon.pos = -new_photon.pos[0], new_photon.pos[1], new_photon.pos[2]
+        new_photon.normal = -new_photon.normal[0], new_photon.normal[1], new_photon.normal[2]
+        self.photons = numpy.append(self.photons, new_photon)
+    
+    def add_symmetric_yphoton(self, sphoton):
+        new_photon = photon([0, 0, 0], [0, 0, 1])
+        new_photon.set_attr( sphoton.get_attr() )
+        new_photon.pos = new_photon.pos[0], -new_photon.pos[1], new_photon.pos[2]
+        new_photon.normal = new_photon.normal[0], -new_photon.normal[1], new_photon.normal[2]
         self.photons = numpy.append(self.photons, new_photon)
 
 
@@ -397,11 +405,14 @@ class Simu:
                 self.check_analysis_plan(photon)
 
 
-    def run(self, symx=True):
+    def run(self, xsym=False, ysym=False):
         n = 1
 
-        if symx:
+        if xsym:
             self.photons = [photons for photons in self.photons if (photons.pos[0]>=0. and numpy.dot(photons.normal, [1, 0, 0])>=0.)]
+        
+        if ysym:
+            self.photons = [photons for photons in self.photons if (photons.pos[1]>=0. and numpy.dot(photons.normal, [0, 1, 0])>=0.)]
 
 
         self.photons = numpy.asarray(self.photons)
@@ -413,10 +424,12 @@ class Simu:
             self.run_photon(splited_lists, list_number)
 
         for index, photon_list in enumerate(self.photon_lists):
-        #    print(len(photon_list))
-            print(len(self.photon_lists))
-        #    for photon in photon_list:
-        #        self.photons_lists[index].add_symmetric_xphoton(photon)
+            for photon in photon_list.photons:
+                if xsym: self.photon_lists[index].add_symmetric_xphoton(photon)
+        
+        for index, photon_list in enumerate(self.photon_lists):
+            for photon in photon_list.photons:
+                if ysym: self.photon_lists[index].add_symmetric_yphoton(photon)
 
 
 

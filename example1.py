@@ -4,7 +4,7 @@ import numpy
 z_array = numpy.linspace(-4.5, 2.0, 11)
 f = 2.0
 lens_pos = -2.5
-res = 0.05
+res = 0.03
 
 ### 1st PART ###
 
@@ -20,11 +20,8 @@ for z in z_array:
     a.create_analysis_plan([0, 0, 1], z)
 
 a.show_elements(False, 'all')
-a.run()
+a.run(xsym=True, ysym=True)
 a.show_elements(True, 'photons')
-
-
-oioi
 
 ### 2ND PART ###
 
@@ -41,7 +38,7 @@ for z in z_array:
 
 
 a.show_elements(False, 'all')
-a.run()
+a.run(xsym=True, ysym=True)
 a.show_elements(True, 'photons')
 
 
@@ -63,5 +60,5 @@ for z in z_array:
 
 
 a.show_elements(False, 'all')
-a.run()
+a.run(xsym=True, ysym=True)
 a.show_elements(True, 'photons')
