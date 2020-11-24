@@ -177,7 +177,6 @@ class Simu:
         if 'xz' not in plan and 'xz' not in plan and 'xy' not in plan:
             raise Exception('Please pick either xy, xz or yz as plan.')
         
-        
         def unpack_2d_photons(photon_list, sindex):
             print(f'Unpacking 2D {len(photon_list.photons)} photons.')
             
@@ -276,17 +275,18 @@ class Simu:
                     self.photons.append(photon([-xpos, -ypos, zc], normal))
 
 
-    def d2_source(self, r, z=0, normal=[0, 0, 1], na = 0.12, angles=1):
-        x = numpy.arange(-r, r, self.res)
+    def d2_source(self, r, c=[0, 0, 0], normal=[0, 0, 1], na = 0.12, angles=1):
+        xc, yc, zc = c
+        x = numpy.arange(xc-r, xc+r, self.res)
         if not x.size>0:
             x=[0]
         naper = numpy.linspace(-na, na, angles)
         for xpos in tqdm(x, desc='Source'):
-            for ypos in numpy.arange(-numpy.sqrt(r**2-xpos**2), numpy.sqrt(r**2-xpos**2)+self.res, self.res):
+            for ypos in numpy.arange(-numpy.sqrt(r**2-(xpos-xc)**2), numpy.sqrt(r**2-(xpos-xc)**2)+self.res, self.res):
                 for nax in naper:
                     for nay in naper:
                         normal2 = numpy.add(normal, numpy.multiply([1, 1, 0], [nax, nay, 0]))
-                        self.photons.append(photon([xpos, ypos, z], normal2))
+                        self.photons.append(photon([xpos, ypos, zc], normal2))
 
     def create_parabolic_section_element(self, c, n, th, wid, pp):
         x0, y0, z0 = c
