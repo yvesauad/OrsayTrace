@@ -111,7 +111,6 @@ class photon():
             self.refraction(index)
         elif index==-1:
             self.reflection()
-        
 
         return True
 
@@ -124,9 +123,6 @@ class Simu:
         self.index = numpy.ones(self.grid)
         self.normal = numpy.asarray([numpy.zeros(self.grid), numpy.zeros(self.grid), numpy.zeros(self.grid)])
         self.photons = list()
-        self.good_photons = list()
-        self.plans=[list(), list(), list()]
-        self.saved_photons=[list(), list(), list()]
         self.photon_lists=numpy.asarray([])
         self.x = numpy.linspace(-self.size[0]/2., self.size[0]/2., self.grid[0])
         self.y = numpy.linspace(-self.size[1]/2., self.size[1]/2., self.grid[1])
@@ -176,12 +172,6 @@ class Simu:
             self.normal[1][indexes[0], indexes[1], indexes[2]], 
             self.normal[2][indexes[0], indexes[1], indexes[2]]], self.index[indexes[0], indexes[1], indexes[2]])
 
-    def save_photon(self, sphoton, index, subindex):
-        new_photon = photon([0, 0, 0], [0, 0, 1])
-        new_photon.set_attr( sphoton.get_attr() )
-        self.good_photons.append(new_photon)
-        self.saved_photons[index][subindex].append(new_photon)
-
 
     def show_photons2D(self, plan='xy'):
         if 'xz' not in plan and 'xz' not in plan and 'xy' not in plan:
@@ -216,7 +206,7 @@ class Simu:
 
         plt.show()
         
-    def show_elements(self, good_photons=False, mode='all'):
+    def show_elements(self, saved_photons=False, mode='all'):
         
         fig = plt.figure()
         ax = plt.axes(projection='3d')
@@ -245,7 +235,7 @@ class Simu:
             ax.quiver(phx, phz, phy, nphx, nphz, nphy, length=0.5)
 
 
-        if good_photons:
+        if saved_photons:
             for index, photon_list in enumerate(self.photon_lists):
                 unpack_photons(photon_list)
         else:
@@ -269,6 +259,22 @@ class Simu:
         
         plt.legend()
         plt.show()
+
+    def circular_source(self, r, c, normal=[0, 0, 1]):
+        xc, yc, zc = c
+        x = numpy.arange(xc-r, xc, self.res)
+        y = numpy.arange(yc-r, yc, self.res)
+        if not x.size>0:
+            x=[0]
+            y=[0]
+        for xpos in tqdm(x, desc='Source'):
+            for ypos in y:
+                if xpos**2+ypos**2<=r**2:
+                    self.photons.append(photon([xpos, ypos, zc], normal))
+                    self.photons.append(photon([-xpos, ypos, zc], normal))
+                    self.photons.append(photon([xpos, -ypos, zc], normal))
+                    self.photons.append(photon([-xpos, -ypos, zc], normal))
+
 
     def d2_source(self, r, z=0, normal=[0, 0, 1], na = 0.12, angles=1):
         x = numpy.arange(-r, r, self.res)
@@ -363,7 +369,7 @@ class Simu:
     def check_analysis_plan(self, photon):
         pos = photon.pos
         for index, planes in enumerate(self.photon_lists):
-            if planes.distance_point_to_plane(pos)<=self.res/1.0:
+            if planes.distance_point_to_plane(pos)<=self.res/2.0:
                 planes.add_photon(photon)
 
     def create_analysis_plan(self, normal, value):
