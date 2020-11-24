@@ -8,11 +8,12 @@ setup(
         author = 'Yves Auad',
         author_email = 'yves.maia-auad@universite-paris-saclay.fr',
         url = 'https://github.com/yvesauad/OrsayTrace',
-        download_url = 'https://github.com/yvesauad/OrsayTrace.git',
+        download_url = 'https://github.com/yvesauad/OrsayTrace/archive/v1.0.tar.gz',
         keywords = ['optics', 'ray', 'tracing']
         install_requires = [
-            'validators',
-            'beautifulsoup4',
+            'numpy',
+            'tqdm',
+            'matplotlib',
             ],
         classifiers = [
             'Development Status :: 3 - Alpha',
