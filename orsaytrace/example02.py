@@ -1,11 +1,11 @@
-import parabolic as ot
+import trace as ot
 import numpy
 import matplotlib.pyplot as plt
 
-z_array = numpy.linspace(-4.5, 14.5, 201)
+z_array = numpy.linspace(-4.5, 14.5, 31)
 f = 2.0
 lens_pos = -2.5
-res = 0.03
+res = 0.05
 r = 0.25
 na=0.0
 ang = 1
@@ -33,18 +33,20 @@ a.d2_source(r, [0, 0, -5.0], [0, 0, 1], na, ang)
 
 lens_pos02 = lens_pos+2*f-0.5
 
-a.create_sphere_element([0.0, 0.0, lens_pos], f/2., 1.43)
-a.create_sphere_element([0.0, 0.0, lens_pos02], f/2., 1.43)
+#a.create_sphere_element([0.0, 0.0, lens_pos], f/2., 1.43)
+#a.create_sphere_element([0.0, 0.0, lens_pos02], f/2., 1.43)
 
-a.create_rectangle_element([-1.1, 1.1, -1.1, 1.1, lens_pos-(f/2.-thick), lens_pos02+(f/2.-thick)], 1.0, [0, 0, 1], inclusive=False)
-a.create_rectangle_element([-1.0, 1.0, -1.0, 1.0, lens_pos02+(f/2.-thick), lens_pos02+(f/2.-thick)], 1.43, [0, 0, 1], inclusive=True)
+#a.create_rectangle_element([-1.1, 1.1, -1.1, 1.1, lens_pos-(f/2.-thick), lens_pos02+(f/2.-thick)], 1.0, [0, 0, 1], inclusive=False)
+#a.create_cylinder_element([0, 0, lens_pos02+(f/2.-thick)], f/2., 0.0, 1.43, [0, 0, 1])
+
+a.create_thin_lens([0, 0, 0.0], 2.0, 1.5, 1.43, 'plane-convex')
 
 for z in z_array:
     a.create_analysis_plan([0, 0, 1], z)
 
-#a.show_elements(False, 'all')
+a.show_created_elements('all-noplan')
 photon_lists = a.run()
-#a.show_elements(True, 'all-noplan')
+a.show_elements(photon_lists, 'all-noplan')
 
 vals = numpy.asarray([])
 vals_distance = numpy.asarray([])

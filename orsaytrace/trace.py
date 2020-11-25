@@ -199,12 +199,11 @@ class Simu:
             self.normal[2][indexes[0], indexes[1], indexes[2]]], self.index[indexes[0], indexes[1], indexes[2]])
 
 
-    def show_photons2D(self, plan='xy'):
+    def show_photons2D(self, my_photon_lists, plan='xy'):
         if 'xz' not in plan and 'xz' not in plan and 'xy' not in plan:
             raise Exception('Please pick either xy, xz or yz as plan.')
         
         def unpack_2d_photons(photon_list, sindex):
-            print(f'Unpacking 2D {len(photon_list.photons)} photons.')
             
             phx, phy, phz = list(), list(), list()
             nphx, nphy, nphz = list(), list(), list()
@@ -221,18 +220,61 @@ class Simu:
             if plan=='xz': axes[sindex].hist2d(phx, phz, 21, weights = intensity)
             if plan=='yz': axes[sindex].hist2d(phy, phz, 21, weights = intensity)
 
-            #axes[sindex].set_title(str(photon_list.normal)+'_'+str(photon_list.value))
             axes[sindex].set_title(str(photon_list.value))
 
-        fig, axes = plt.subplots(nrows=1, ncols=len(self.photon_lists), sharex=False, sharey=False)
+        fig, axes = plt.subplots(nrows=1, ncols=len(my_photon_lists), sharex=False, sharey=False)
             
-        for index, photon_list in enumerate(self.photon_lists):
+        for index, photon_list in enumerate(my_photon_lists):
+            assert hasattr(photon_list, 'photons')
             unpack_2d_photons(photon_list, index)
 
         plt.show()
+
+    def show_created_elements(self, mode):
         
-    def show_elements(self, saved_photons=False, mode='all'):
+        fig = plt.figure()
+        ax = plt.axes(projection='3d')
+        xrefl, yrefl, zrefl = self.grid_to_pos(numpy.where(self.index==-1.00))
+        xrefr, yrefr, zrefr = self.grid_to_pos(numpy.where(self.index>1.00))
+
+        def unpack_photons(photon_list):
+            print(f'Unpacking {len(photon_list)} photons.')
+            
+            phx, phy, phz = list(), list(), list()
+            nphx, nphy, nphz = list(), list(), list()
+
+            for photon in photon_list:
+                ipos = photon.pos
+                nor = photon.normal
+                phx.append(ipos[0]); phy.append(ipos[1]); phz.append(ipos[2])
+                nphx.append(nor[0]); nphy.append(nor[1]); nphz.append(nor[2])
+            
+            ax.scatter(phx, phz, phy, c='green', label='Photons')
+            ax.quiver(phx, phz, phy, nphx, nphz, nphy, length=0.5)
+
+        unpack_photons(self.photons)
+
+        if 'all' in mode:
+            if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Refractive')
+            if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Reflective')
+            if '-noplan' not in mode:
+                for index, photon_list in enumerate(self.photon_lists):
+                    ax.plot_surface(self.x, (photon_list.value-photon_list.normal[0]*self.x-photon_list.normal[1]*self.y)/photon_list.normal[2], self.y, color='yellow', alpha=0.2)
+
+        ax.set_xlabel('X')
+        ax.set_xlim(-self.size[0]/2.0, self.size[0]/2.0)
         
+        ax.set_ylabel('Z')
+        ax.set_ylim(-self.size[2]/2.0, self.size[2]/2.0)
+       
+        ax.set_zlabel('Y') 
+        ax.set_zlim(-self.size[1]/2.0, self.size[1]/2.0)
+        
+        plt.legend()
+        plt.show()
+
+    def show_elements(self, my_photon_lists, mode='all-noplan'):
+
         fig = plt.figure()
         ax = plt.axes(projection='3d')
         xrefl, yrefl, zrefl = self.grid_to_pos(numpy.where(self.index==-1.00))
@@ -243,10 +285,8 @@ class Simu:
                 title = 'PN: '+str(photon_list.normal)+'. d= '+format(photon_list.value, '.2f')
                 photon_list = photon_list.photons
                 title = ''
-            else:
-                title = 'Photons'
             
-            print(f'Unpacking {len(photon_list)} photons.')
+            #print(f'Unpacking {len(photon_list)} photons.')
             
             phx, phy, phz = list(), list(), list()
             nphx, nphy, nphz = list(), list(), list()
@@ -261,11 +301,9 @@ class Simu:
             ax.quiver(phx, phz, phy, nphx, nphz, nphy, length=0.5)
 
 
-        if saved_photons:
-            for index, photon_list in enumerate(self.photon_lists):
-                unpack_photons(photon_list)
-        else:
-            unpack_photons(self.photons)
+        for index, photon_list in enumerate(my_photon_lists):
+            assert hasattr(photon_list, 'photons')
+            unpack_photons(photon_list)
         
 
         if 'all' in mode:
@@ -390,10 +428,55 @@ class Simu:
                     self.assign_n(ind, n)
                     self.assign_normal(ind, normal)
 
+    def create_cylinder_element(self, center, radius, length, n, normal):
+        
+        xc, yc, zc = center
+        
+        def assign(pos):
+            xpos, ypos, zpos = pos
+            ind = self.pos_to_grid([xpos, ypos, zpos])
+            self.assign_n(ind, n)
+            self.assign_normal(ind, normal)
+        
+        x = numpy.arange(xc-radius, xc+self.res, self.res/self.ss)
+        y = numpy.arange(yc-radius, yc+self.res, self.res/self.ss)
+        z = numpy.arange(zc - length/2., zc+self.res, self.res/self.ss)
+        for xpos in tqdm(x, desc='Cylinder'):
+            for ypos in y:
+                if (xpos-xc)**2+(ypos-yc)**2<=radius**2:
+                    for zpos in z:
+                        assign([xpos, ypos, zpos])
+                        assign([xpos, -ypos+2*yc, zpos])
+                        assign([xpos, -ypos+2*yc, -zpos+2*zc])
+                        assign([xpos, ypos, -zpos+2*zc])
+                        
+                        assign([-xpos+2*xc, ypos, zpos])
+                        assign([-xpos+2*xc, -ypos+2*yc, zpos])
+                        assign([-xpos+2*xc, -ypos+2*yc, -zpos+2*zc])
+                        assign([-xpos+2*xc, ypos, -zpos+2*zc])
+
+
+
+
+    def create_thin_lens(self, cplane, focus, aperture, index_refr, lens_type='plane-convex'):
+        xc, yc, zp = cplane
+        r = focus/2.0
+        assert focus/2.>=aperture/2.
+        if lens_type=='plane-convex': zc = zp - numpy.sqrt((focus/2.0)**2 - (aperture/2.)**2) #plane_convex
+        if lens_type=='convex-plane': zc = zp + numpy.sqrt((focus/2.0)**2 - (aperture/2.)**2) #convex-plane
+
+        self.create_sphere_element([xc, yc, zc], focus/2., index_refr)
+        
+        print(xc, yc, zc, zp)
+
+        if lens_type=='plane-convex':
+            self.create_rectangle_element([xc-r-self.res, xc+r, yc-r-self.res, yc+r, zc-r-self.res, zp], 1.0, [0, 0, 0], inclusive=True)
+            self.create_cylinder_element([xc, yc, zp], aperture/2., 0.0, index_refr, [0, 0, 1])
+
     def distance(self, vec1, vec2):
         return numpy.sum(numpy.power(numpy.subtract(vec1, vec2), 2))**0.5
 
-    def check_position(self, photon):
+    def is_photon_in_cell(self, photon):
         pos = photon.pos
         if -self.size[0]/2.<pos[0]<self.size[0]/2. and -self.size[1]/2.<pos[1]<self.size[1]/2. and -self.size[2]/2.<pos[2]<self.size[2]/2.:
            return True
@@ -414,7 +497,7 @@ class Simu:
             while True:
                 photon.update(self.normal_and_index_from_pos(photon.pos))
                 photon.move(self.res)   
-                if not self.check_position(photon):
+                if not self.is_photon_in_cell(photon):
                     self.photons[index] = [photons for photons in self.photons[index] if photons!=photon]
                     break
                 self.check_analysis_plan(photon)

@@ -1,4 +1,4 @@
-import parabolic as ot
+import trace as ot
 import numpy
 
 z_array = numpy.linspace(-4.5, 2.0, 11)

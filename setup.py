@@ -2,14 +2,14 @@ from distutils.core import setup
 setup(
         name='orsaytrace',
         packages = ['orsaytrace'],
-        version = '1.0',
+        version = '1.0.1',
         license = 'MIT',
         description = 'Flexible ray tracing for optics',
         author = 'Yves Auad',
         author_email = 'yves.maia-auad@universite-paris-saclay.fr',
         url = 'https://github.com/yvesauad/OrsayTrace',
         download_url = 'https://github.com/yvesauad/OrsayTrace/archive/v1.0.tar.gz',
-        keywords = ['optics', 'ray', 'tracing']
+        keywords = ['optics', 'ray', 'tracing'],
         install_requires = [
             'numpy',
             'tqdm',
