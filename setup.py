@@ -8,7 +8,7 @@ setup(
         author = 'Yves Auad',
         author_email = 'yves.maia-auad@universite-paris-saclay.fr',
         url = 'https://github.com/yvesauad/OrsayTrace',
-        download_url = 'https://github.com/yvesauad/OrsayTrace/archive/v1.0.tar.gz',
+        download_url = 'https://github.com/yvesauad/OrsayTrace/archive/v1.0.2.tar.gz',
         keywords = ['optics', 'ray', 'tracing'],
         install_requires = [
             'numpy',
