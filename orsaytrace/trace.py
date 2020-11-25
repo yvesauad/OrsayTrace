@@ -359,6 +359,52 @@ class Simu:
                             self.photons.append(photon([-xpos, ypos, zc], normal2))
                             self.photons.append(photon([xpos, -ypos, zc], normal2))
                             self.photons.append(photon([-xpos, -ypos, zc], normal2))
+    
+    def rotate_x(self, angle):
+        
+        def rotate(p, ang, index_refr):
+            px, py, pz = p
+            mx = numpy.asarray([
+                    [1, 0, 0],
+                    [0, numpy.cos(ang), -numpy.sin(ang)],
+                    [0, numpy.sin(ang), numpy.cos(ang)],
+                    ])
+            
+            my = numpy.asarray([
+                    [numpy.cos(ang), 0, numpy.sin(ang)],
+                    [0, 1, 0],
+                    [-numpy.sin(ang), 0, numpy.cos(ang)],
+                    ])
+            
+            mz = numpy.asarray([
+                    [numpy.cos(ang), -numpy.sin(ang), 0],
+                    [numpy.sin(ang), numpy.cos(ang), 0],
+                    [0, 0, 1],
+                    ])
+            
+            pos = numpy.asarray([
+                    [px],
+                    [py],
+                    [pz],
+                    ])
+
+            new_x, new_y, new_z = numpy.matmul(mx, pos)
+            index_refr = numpy.asarray([index_refr])
+            print(pos, numpy.asarray([new_x, new_y, new_z, index_refr]).T)
+            return numpy.asarray([new_x, new_y, new_z, index_refr]).T
+
+        points_to_rotate = numpy.zeros((1, 4))
+        for x, xyz in enumerate(self.index):
+            for y, yz in enumerate(xyz):
+                for z, irefr in enumerate(yz):
+                    if irefr != 1:
+                        points_to_rotate = numpy.append(points_to_rotate, rotate([x, y, z], angle, irefr), axis=0)
+                        self.index[x, y, z] = 1.0
+
+        for index_point in points_to_rotate:
+            ix, iy, iz, ind_refr = index_point
+            self.index[int(ix), int(iy), int(iz)] = ind_refr
+
 
     def create_parabolic_section_element(self, c, n, th, wid, pp):
         x0, y0, z0 = c
@@ -467,11 +513,13 @@ class Simu:
 
         self.create_sphere_element([xc, yc, zc], focus/2., index_refr)
         
-        print(xc, yc, zc, zp)
-
         if lens_type=='plane-convex':
-            self.create_rectangle_element([xc-r-self.res, xc+r, yc-r-self.res, yc+r, zc-r-self.res, zp], 1.0, [0, 0, 0], inclusive=True)
-            self.create_cylinder_element([xc, yc, zp], aperture/2., 0.0, index_refr, [0, 0, 1])
+            self.create_rectangle_element([xc-r-self.res, xc+r, yc-r-self.res, yc+r, zc-r-self.res, zp], 1.0, [0, 0, 0])
+
+        if lens_type=='convex-plane':
+            self.create_rectangle_element([xc-r-self.res, xc+r, yc-r-self.res, yc+r, zp-self.res, zc+r], 1.0, [0, 0, 0])
+        
+        self.create_cylinder_element([xc, yc, zp], aperture/2., 0.0, index_refr, [0, 0, 1])
 
     def distance(self, vec1, vec2):
         return numpy.sum(numpy.power(numpy.subtract(vec1, vec2), 2))**0.5

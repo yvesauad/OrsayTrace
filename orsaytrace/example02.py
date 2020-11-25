@@ -2,49 +2,35 @@ import trace as ot
 import numpy
 import matplotlib.pyplot as plt
 
-z_array = numpy.linspace(-4.5, 14.5, 31)
-f = 2.0
-lens_pos = -2.5
-res = 0.05
+z_array = numpy.linspace(-9.0, 9.0, 51)
+focus1 = 2.0
+focus2 = 2.0
+zlens1 = -6.0
+d12 = 6.0
+res = 0.08
 r = 0.25
 na=0.0
 ang = 1
-thick = 0.3
 
-f_pos = -1.29
+### PART 01 ###
 
-#round part is at -2.5 - f/2. = -3.5. Plane is at -3.5+thick = -3.2. Focus is at -1.29, which is at 1.91 from plane side.
+a = ot.Simu(5, 5, 20, res)
 
 
-### 1st PART ###
 
-a = ot.Simu(5, 5, 30, res)
 
-#Plane convex lens. Source is point source diverging.
-#a.d2_source(r, [-2*r, 0, -5.0], [0, 0, 1], na, ang)
-#a.d2_source(r, [-2*r, 2*r, -5.0], [0, 0, 1], na, ang)
-#a.d2_source(r, [-2*r, -2*r, -5.0], [0, 0, 1], na, ang)
-a.d2_source(r, [0, 0, -5.0], [0, 0, 1], na, ang)
-#a.d2_source(r, [0, 2*r, -5.0], [0, 0, 1], na, ang)
-#a.d2_source(r, [0, -2*r, -5.0], [0, 0, 1], na, ang)
-#a.d2_source(r, [2*r, 0, -5.0], [0, 0, 1], na, ang)
-#a.d2_source(r, [2*r, 2*r, -5.0], [0, 0, 1], na, ang)
-#a.d2_source(r, [2*r, -2*r, -5.0], [0, 0, 1], na, ang)
+a.d2_source(r, [0, 0, -9.5], [0, 0, 1], na, ang)
 
-lens_pos02 = lens_pos+2*f-0.5
+a.create_thin_lens([0, 0, zlens1], focus1, 1.5, 1.43, 'convex-plane')
+#a.create_thin_lens([0, 0, zlens1+d12], focus2, 1.5, 1.43, 'plane-convex')
 
-#a.create_sphere_element([0.0, 0.0, lens_pos], f/2., 1.43)
-#a.create_sphere_element([0.0, 0.0, lens_pos02], f/2., 1.43)
-
-#a.create_rectangle_element([-1.1, 1.1, -1.1, 1.1, lens_pos-(f/2.-thick), lens_pos02+(f/2.-thick)], 1.0, [0, 0, 1], inclusive=False)
-#a.create_cylinder_element([0, 0, lens_pos02+(f/2.-thick)], f/2., 0.0, 1.43, [0, 0, 1])
-
-a.create_thin_lens([0, 0, 0.0], 2.0, 1.5, 1.43, 'plane-convex')
+a.rotate_x(numpy.pi/8.)
 
 for z in z_array:
     a.create_analysis_plan([0, 0, 1], z)
 
 a.show_created_elements('all-noplan')
+oi
 photon_lists = a.run()
 a.show_elements(photon_lists, 'all-noplan')
 
@@ -76,4 +62,3 @@ axes[1, 0].set_xlabel('Z (A.U.)')
 axes[1, 1].set_xlabel('Z (A.U.)')
 
 plt.show()
-
