@@ -360,45 +360,48 @@ class Simu:
                             self.photons.append(photon([xpos, -ypos, zc], normal2))
                             self.photons.append(photon([-xpos, -ypos, zc], normal2))
     
-    def rotate_x(self, angle):
-        
-        def rotate(p, ang, index_refr):
+    def rotate_x(self, ang, axis, origin):
+        axis = axis / numpy.linalg.norm(axis)
+        ux, uy, uz = axis
+
+        xc, yc, zc = self.pos_to_grid(origin)
+
+        pos_origin = numpy.asarray([
+            [xc],
+            [yc],
+            [zc],
+            ])
+
+        def rotate(p, index_refr):
             px, py, pz = p
-            mx = numpy.asarray([
-                    [1, 0, 0],
-                    [0, numpy.cos(ang), -numpy.sin(ang)],
-                    [0, numpy.sin(ang), numpy.cos(ang)],
-                    ])
+            c = numpy.cos(ang)
+            s = numpy.sin(ang)
+            ux, uy, uz = axis
             
-            my = numpy.asarray([
-                    [numpy.cos(ang), 0, numpy.sin(ang)],
-                    [0, 1, 0],
-                    [-numpy.sin(ang), 0, numpy.cos(ang)],
-                    ])
-            
-            mz = numpy.asarray([
-                    [numpy.cos(ang), -numpy.sin(ang), 0],
-                    [numpy.sin(ang), numpy.cos(ang), 0],
-                    [0, 0, 1],
-                    ])
-            
+            m = numpy.asarray([
+                [c+ux**2*(1-c), ux*uy*(1-c)-uz*s, ux*uz*(1-c)+uy*s],
+                [uy*ux*(1-c)+uz*s, c+uy**2*(1-c), uy*uz*(1-c)-ux*s],
+                [uz*ux*(1-c)-uy*s, uz*uy*(1-c)+ux*s, c+uz**2*(1-c)],
+                ])
+
+
             pos = numpy.asarray([
                     [px],
                     [py],
                     [pz],
                     ])
 
-            new_x, new_y, new_z = numpy.matmul(mx, pos)
+
+            new_x, new_y, new_z = numpy.matmul(m, pos - pos_origin) + pos_origin
             index_refr = numpy.asarray([index_refr])
-            print(pos, numpy.asarray([new_x, new_y, new_z, index_refr]).T)
             return numpy.asarray([new_x, new_y, new_z, index_refr]).T
 
-        points_to_rotate = numpy.zeros((1, 4))
+        points_to_rotate = numpy.ones((1, 4))
         for x, xyz in enumerate(self.index):
             for y, yz in enumerate(xyz):
                 for z, irefr in enumerate(yz):
                     if irefr != 1:
-                        points_to_rotate = numpy.append(points_to_rotate, rotate([x, y, z], angle, irefr), axis=0)
+                        points_to_rotate = numpy.append(points_to_rotate, rotate([x, y, z], irefr), axis=0)
                         self.index[x, y, z] = 1.0
 
         for index_point in points_to_rotate:

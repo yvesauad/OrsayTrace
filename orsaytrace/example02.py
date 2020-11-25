@@ -2,12 +2,12 @@ import trace as ot
 import numpy
 import matplotlib.pyplot as plt
 
-z_array = numpy.linspace(-9.0, 9.0, 51)
+z_array = numpy.linspace(-9.0, 9.0, 301)
 focus1 = 2.0
 focus2 = 2.0
 zlens1 = -6.0
 d12 = 6.0
-res = 0.08
+res = 0.03
 r = 0.25
 na=0.0
 ang = 1
@@ -16,23 +16,17 @@ ang = 1
 
 a = ot.Simu(5, 5, 20, res)
 
-
-
-
 a.d2_source(r, [0, 0, -9.5], [0, 0, 1], na, ang)
 
 a.create_thin_lens([0, 0, zlens1], focus1, 1.5, 1.43, 'convex-plane')
-#a.create_thin_lens([0, 0, zlens1+d12], focus2, 1.5, 1.43, 'plane-convex')
-
-a.rotate_x(numpy.pi/8.)
+a.create_thin_lens([0, 0, zlens1+d12], focus2, 1.5, 1.43, 'plane-convex')
 
 for z in z_array:
     a.create_analysis_plan([0, 0, 1], z)
 
-a.show_created_elements('all-noplan')
-oi
+#a.show_created_elements('all-noplan')
 photon_lists = a.run()
-a.show_elements(photon_lists, 'all-noplan')
+#a.show_elements(photon_lists, 'all-noplan')
 
 vals = numpy.asarray([])
 vals_distance = numpy.asarray([])

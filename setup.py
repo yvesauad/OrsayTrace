@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
         name='orsaytrace',
         packages = ['orsaytrace'],
-        version = '1.0.1',
+        version = '1.0.2',
         license = 'MIT',
         description = 'Flexible ray tracing for optics',
         author = 'Yves Auad',
