@@ -356,11 +356,11 @@ class Simu:
                         for nay in naper:
                             normal2 = numpy.add(normal, numpy.multiply([1, 1, 0], [nax, nay, 0]))
                             self.photons.append(photon([xpos, ypos, zc], normal2))
-                            self.photons.append(photon([-xpos, ypos, zc], normal2))
-                            self.photons.append(photon([xpos, -ypos, zc], normal2))
-                            self.photons.append(photon([-xpos, -ypos, zc], normal2))
+                            self.photons.append(photon([-xpos+2*xc, ypos, zc], normal2))
+                            self.photons.append(photon([xpos, -ypos+2*yc, zc], normal2))
+                            self.photons.append(photon([-xpos+2*xc, -ypos+2*yc, zc], normal2))
     
-    def rotate_x(self, ang, axis, origin):
+    def rotate(self, ang, axis, origin):
         axis = axis / numpy.linalg.norm(axis)
         ux, uy, uz = axis
 
@@ -372,7 +372,7 @@ class Simu:
             [zc],
             ])
 
-        def rotate(p, index_refr):
+        def rotate_func(p):
             px, py, pz = p
             c = numpy.cos(ang)
             s = numpy.sin(ang)
@@ -393,21 +393,35 @@ class Simu:
 
 
             new_x, new_y, new_z = numpy.matmul(m, pos - pos_origin) + pos_origin
-            index_refr = numpy.asarray([index_refr])
-            return numpy.asarray([new_x, new_y, new_z, index_refr]).T
+            #return numpy.asarray([new_x, new_y, new_z])
+            return (numpy.matmul(m, pos - pos_origin) + pos_origin).T
 
-        points_to_rotate = numpy.ones((1, 4))
+        points_to_rotate = None
+        index_to_rotate = None
+        normal_to_rotate = None
         for x, xyz in enumerate(self.index):
             for y, yz in enumerate(xyz):
                 for z, irefr in enumerate(yz):
                     if irefr != 1:
-                        points_to_rotate = numpy.append(points_to_rotate, rotate([x, y, z], irefr), axis=0)
-                        self.index[x, y, z] = 1.0
+                        if points_to_rotate is None:
+                            points_to_rotate = numpy.asarray(rotate_func([x, y, z]))
+                            index_to_rotate = numpy.asarray(irefr)
+                            normal_to_rotate = numpy.asarray([self.normal[:, x, y, z]])
+                        
+                        points_to_rotate = numpy.append(points_to_rotate, rotate_func([x, y, z]), axis=0)
+                        index_to_rotate = numpy.append(index_to_rotate, irefr)
+                        normal_to_rotate = numpy.append(normal_to_rotate, [self.normal[:, x, y, z]], axis=0)
+                        
+                        self.assign_n([x, y, z], 1.0)
+                        self.assign_normal([x, y, z], [0, 0, 0])
 
-        for index_point in points_to_rotate:
-            ix, iy, iz, ind_refr = index_point
-            self.index[int(ix), int(iy), int(iz)] = ind_refr
 
+        for j, index_point in enumerate(points_to_rotate):
+            ix, iy, iz = index_point
+            ind_refr = index_to_rotate[j]
+            normal = normal_to_rotate[j]
+            self.assign_n([int(ix), int(iy), int(iz)], ind_refr)
+            self.assign_normal([int(ix), int(iy), int(iz)], normal)
 
     def create_parabolic_section_element(self, c, n, th, wid, pp):
         x0, y0, z0 = c

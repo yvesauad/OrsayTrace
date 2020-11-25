@@ -7,7 +7,7 @@ focus1 = 2.0
 focus2 = 2.0
 zlens1 = -6.0
 d12 = 6.0
-res = 0.03
+res = 0.05
 r = 0.25
 na=0.0
 ang = 1
@@ -26,7 +26,7 @@ for z in z_array:
 
 #a.show_created_elements('all-noplan')
 photon_lists = a.run()
-#a.show_elements(photon_lists, 'all-noplan')
+a.show_elements(photon_lists, 'all-noplan')
 
 vals = numpy.asarray([])
 vals_distance = numpy.asarray([])

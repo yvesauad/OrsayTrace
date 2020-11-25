@@ -2,9 +2,11 @@ from distutils.core import setup
 setup(
         name='orsaytrace',
         packages = ['orsaytrace'],
-        version = '1.0.2',
+        version = '1.0.3',
         license = 'MIT',
         description = 'Flexible ray tracing for optics',
+        long_description = open('README.md').read(),
+        long_description_content_type = 'text/markdown'
         author = 'Yves Auad',
         author_email = 'yves.maia-auad@universite-paris-saclay.fr',
         url = 'https://github.com/yvesauad/OrsayTrace',
