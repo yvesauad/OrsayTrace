@@ -37,6 +37,7 @@ class photon_list():
         self.photons = numpy.append(self.photons, new_photon)
 
     def avg_divergence(self, normal_ref):
+        normal_ref = normal_ref / numpy.linalg.norm(normal_ref)
         vals = numpy.average([numpy.dot(photon.normal, normal_ref)**2 for photon in self.photons])
         return vals
 
@@ -311,7 +312,12 @@ class Simu:
             if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Reflective')
             if '-noplan' not in mode:
                 for index, photon_list in enumerate(self.photon_lists):
-                    ax.plot_surface(self.x, (photon_list.value-photon_list.normal[0]*self.x-photon_list.normal[1]*self.y)/photon_list.normal[2], self.y, color='yellow', alpha=0.2)
+                    if photon_list.normal[2]>0:
+                        ax.plot_surface(self.x, (photon_list.value-photon_list.normal[0]*self.x-photon_list.normal[1]*self.y)/photon_list.normal[2], self.y, color='yellow', alpha=0.2)
+                    elif photon_list.normal[1]>0:
+                        ax.plot_surface(self.x, self.y, (photon_list.value-photon_list.normal[0]*self.x-photon_list.normal[2]*self.y)/photon_list.normal[1], color='yellow', alpha=0.2)
+                    elif photon_list.normal[0]>0:
+                        ax.plot_surface((photon_list.value-photon_list.normal[2]*self.x-photon_list.normal[1]*self.y)/photon_list.normal[0], self.x, self.y, color='yellow', alpha=0.2)
 
         ax.set_xlabel('X')
         ax.set_xlim(-self.size[0]/2.0, self.size[0]/2.0)
@@ -325,10 +331,10 @@ class Simu:
         plt.legend()
         plt.show()
 
-    def circular_source(self, r, c, normal=[0, 0, 1]):
+    def point_source(self, r, c, normal=[0, 0, 1]):
         xc, yc, zc = c
-        x = numpy.arange(xc-r, xc, self.res)
-        y = numpy.arange(yc-r, yc, self.res)
+        x = numpy.arange(xc-r, xc+self.res, self.res)
+        y = numpy.arange(yc-r, yc+self.res, self.res)
         if not x.size>0:
             x=[0]
             y=[0]
@@ -339,6 +345,7 @@ class Simu:
                     self.photons.append(photon([-xpos, ypos, zc], normal))
                     self.photons.append(photon([xpos, -ypos, zc], normal))
                     self.photons.append(photon([-xpos, -ypos, zc], normal))
+
 
 
     def d2_source(self, r, c=[0, 0, 0], normal=[0, 0, 1], na = 0.12, angles=1):
@@ -596,25 +603,6 @@ class Simu:
 
         return self.photon_lists
 
+    def reset(self):
+        pass
 
-
-mirror_focus = 0.3
-yvertex = 0.5+0.3
-thickness = 1.2
-
-#a = Simu(5, 5, 5, 0.03)
-#a.d2_source(0.0, -2.5, [0, 0, 1], 0.32, 21)
-
-#a.create_sphere_element([0.0, 0.0, 0.5], 1.0, 1.43) #from 2 to 3.
-#a.create_rectangle_element([-1.0, 1.0, -1.0, 1.0, 0.5, 2.0], 1.0, [0, 0, 1]) 
-
-#a.create_parabolic_section_element([0.0, yvertex, 0.0], -1.0, 2*thickness, 3.0, 1.0) 
-#a.create_rectangle_element([-2.45, 2.45, yvertex-mirror_focus, 2.0, -2.0, 0.0], 1.0, [0, 0, 1]) 
-
-#for val in numpy.linspace(0, 2.3, 3):
-#    a.create_analysis_plan(z=val)
-
-#a.show_elements(False, 'all')
-#a.run()
-#a.show_elements(True, 'photons')
-#a.show_photons2D('xy')
