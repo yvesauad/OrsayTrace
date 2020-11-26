@@ -20,8 +20,12 @@ class photon_list():
             for cond, val in self.condition_dict.items():
                 for key, pval in photon.__dict__.items():
                     if cond==key:
-                        if pval>=val:
-                            self.photons = numpy.append(self.photons, photon)
+                        if type(val) is tuple:
+                            if pval>=val[0] and pval<=val[1]:
+                                self.photons = numpy.append(self.photons, photon)
+                        else:
+                            if pval>=val:
+                                self.photons = numpy.append(self.photons, photon)
         else:
             self.photons = numpy.append(self.photons, photon)
 
@@ -104,7 +108,7 @@ class photon():
         self.reflection_count+=1
 
         self.normal = refl
-        #print(self.reflection_count, inc, sur_normal, refl)
+        print(self.reflection_count, inc, sur_normal, refl, self.pos)
         return True
     
     def refraction(self, n2):
@@ -160,10 +164,13 @@ class photon():
         
         if index!=self.n and index>0:
             self.refraction(index)
+            return True
         elif index==-1:
             self.reflection()
+            return True
 
-        return True
+        return False
+
 
 class Simu:
     def __init__(self, x, y, z, res):
@@ -475,29 +482,33 @@ class Simu:
             self.assign_normal([int(ix), int(iy), int(iz)], normal)
 
     def create_parabolic_section_element(self, c, n, th, wid, pp):
-        x0, y0, z0 = c
-        #th is thickness and it is related to y. ysym of 0.5 means a symmetric with respect to Z. Thickness is
-        #this whole value in z. If ysym is 0, thickness is related to the semi parabola in negative y's. Same
-        #applies to x with xsym / width [wid]
-        ymax = y0 + 0.5*th
-        ymin = y0 - 0.5*th
-
-        xmax = x0 + 0.5*wid
-        xmin = x0 - 0.5*wid
         
-        zmax = z0
-        zmin = z0 - (1/2*pp)*(max(abs(ymax-y0), abs(ymin-y0))**2+max(abs(xmax-x0), abs(xmin-x0))**2)
-        x = numpy.arange(xmin, xmax+self.res, self.res/self.ss)
-        y = numpy.arange(ymin, ymax+self.res, self.res/self.ss)
-        z = numpy.arange(zmin, zmax+self.res, self.res/self.ss)
+        def assign(pos):
+            xpos, ypos, zpos = pos
+            ind = self.pos_to_grid([xpos, ypos, zpos])
+            self.assign_n(ind, n)
+            self.assign_normal(ind, [(1/pp)*(xpos-x0), (1/pp)*(ypos-y0), 1])
+        
+        x0, y0, z0 = c
+        ymax = y0 + 0.5*th; ymin = y0 - 0.5*th
+        xmax = x0 + 0.5*wid; xmin = x0 - 0.5*wid
+        zmax = z0; zmin = z0 - (1/2*pp)*(max(abs(ymax-y0), abs(ymin-y0))**2+max(abs(xmax-x0), abs(xmin-x0))**2)
+        
+        x = numpy.arange(xmin, x0+self.res, self.res/self.ss)
+        y = numpy.arange(ymin, y0+self.res, self.res/self.ss)
+        z = numpy.arange(zmin, z0+self.res, self.res/self.ss)
+        
         for xpos in tqdm(x, desc='Parabolic'):
             for ypos in y:
                 for zpos in z:
                     if (zpos-z0)>(-1/(2*pp))*((ypos-y0)**2+(xpos-x0)**2):
-                        ind = self.pos_to_grid([xpos, ypos, zpos])
-                        self.assign_n(ind, n)
-                        self.assign_normal(ind, [(1/pp)*(xpos-x0), (1/pp)*(ypos-y0), 1])
-        
+                        
+                        assign([xpos, ypos, zpos])
+                        assign([xpos, -ypos+2*y0, zpos])
+                        
+                        assign([-xpos+2*x0, ypos, zpos])
+                        assign([-xpos+2*x0, -ypos+2*y0, zpos])
+
 
     def create_sphere_element(self, c, r, n):
         
@@ -614,8 +625,8 @@ class Simu:
     def run_photon(self, photon_list, index):
         for photon in tqdm(photon_list, desc=f'Running'):
             while True:
-                photon.update(self.normal_and_index_from_pos(photon.pos))
-                photon.move(self.res)   
+                if photon.update(self.normal_and_index_from_pos(photon.pos)): photon.move(self.res)
+                photon.move(self.res)
                 if not self.is_photon_in_cell(photon):
                     self.photons[index] = [photons for photons in self.photons[index] if photons!=photon]
                     break
