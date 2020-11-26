@@ -156,12 +156,18 @@ class Simu:
         self.x, self.y = numpy.meshgrid(self.x, self.y)
 
     def assign_normal(self, index, normal):
-        self.normal[0][index[0], index[1], index[2]] = normal[0]
-        self.normal[1][index[0], index[1], index[2]] = normal[1]
-        self.normal[2][index[0], index[1], index[2]] = normal[2]
+        for i in range(3):
+            self.normal[i][index[0], index[1], index[2]] = normal[i]
+    
+    def assign_block_normal(self, min_index, max_index, normal):
+        for i in range(3):
+            self.normal[i][min_index[0]:max_index[0], min_index[1]:max_index[1], min_index[2]:max_index[2]] = normal[i]
 
     def assign_n(self, index, value):
         self.index[index[0], index[1], index[2]] = value
+    
+    def assign_block_n(self, min_index, max_index, value):
+        self.index[min_index[0]:max_index[0], min_index[1]:max_index[1], min_index[2]:max_index[2]] = value
 
     def pos_to_grid_1D(self, value, index):
         return int((value/(self.size[index]/2.)+1)/2*self.grid[index])
@@ -406,6 +412,7 @@ class Simu:
         points_to_rotate = None
         index_to_rotate = None
         normal_to_rotate = None
+
         for x, xyz in enumerate(self.index):
             for y, yz in enumerate(xyz):
                 for z, irefr in enumerate(yz):
@@ -482,21 +489,22 @@ class Simu:
                         assign([-xpos+2*c[0], ypos, -zpos+2*c[2]])
 
 
-    def create_rectangle_element(self, val, n, normal, inclusive=True):
-        if inclusive:
-            fac = 1
-        else:
-            fac = 0
+    def create_rectangle_element(self, val, n, normal):
+        
         xmin, xmax, ymin, ymax, zmin, zmax = val
-        x = numpy.arange(xmin, xmax+fac*self.res, self.res/self.ss)
-        y = numpy.arange(ymin, ymax+fac*self.res, self.res/self.ss)
-        z = numpy.arange(zmin, zmax+fac*self.res, self.res/self.ss)
-        for xpos in tqdm(x, desc='Rectangle'):
-            for ypos in y:
-                for zpos in z:
-                    ind = self.pos_to_grid([xpos, ypos, zpos])
-                    self.assign_n(ind, n)
-                    self.assign_normal(ind, normal)
+        xc, yc, zc = (xmin+xmax)/2., (ymin+ymax)/2., (zmax+zmin)/2.
+        xl, yl, zl = (xmax-xmin)/2., (ymax-ymin)/2., (zmax-zmin)/2.
+        assert xl>=0 and yl>=0 and zl>=0
+
+        x = [x for x in numpy.arange(xc-xl, xc+self.res, self.res/self.ss) if abs(x)<self.size[0]/2. and abs(-x+2*xc)<self.size[0]/2.]
+        y = [y for y in numpy.arange(yc-yl, yc+self.res, self.res/self.ss) if abs(y)<self.size[1]/2. and abs(-y+2*yc)<self.size[1]/2.]
+        z = [z for z in numpy.arange(zc-zl, zc+self.res, self.res/self.ss) if abs(z)<self.size[2]/2. and abs(-z+2*zc)<self.size[2]/2.]
+        
+        min_index = self.pos_to_grid([min(x), min(y), min(z)])
+        max_index = self.pos_to_grid([-min(x)+2*xc, -min(y)+2*yc, -min(z)+2*zc])
+        
+        self.assign_block_n(min_index, max_index, n)
+        self.assign_block_normal(min_index, max_index, normal)
 
     def create_cylinder_element(self, center, radius, length, n, normal):
         

@@ -4,19 +4,20 @@ import numpy
 x, y, z, res = 5, 5, 10, 0.05
 
 
-mirror_focus = 0.3
+focus = 0.3
 yvertex = 0.5+0.3
 thickness = 1.2
+p = 2.0
 r = 0.5
 
 y_array = numpy.linspace(r+0.1, yvertex, 5)
 
 a = ot.Simu(x, y, z, res)
 
-a.d2_source(r, [0, 0, -z/2], [0, 0, 1], 0.0, 1)
+a.point_source(r, [0, 0, -z/2], [0, 0, 1])
 
-a.create_parabolic_section_element([0.0, yvertex, 0.0], -1.0, 2*thickness, 3.0, 1.0) 
-a.create_rectangle_element([-x/2, x/2, yvertex-mirror_focus, y/2, -z/2, z/2], 1.0, [0, 0, 0], inclusive=False) 
+a.create_parabolic_section_element([0.0, yvertex, 0.0], -1.0, 2*thickness, 3.0, p) 
+a.create_rectangle_element([-x/2, x/2, yvertex-focus, y/2, -z/2, z/2], 1.0, [0, 0, 0]) 
 
 for y in y_array:
     a.create_analysis_plan([0, 1, 0], y)
