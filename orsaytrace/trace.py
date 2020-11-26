@@ -13,11 +13,23 @@ class photon_list():
         self.normal = normal / numpy.linalg.norm(normal)
         self.value = value
         self.photons = numpy.asarray([])
+        self.condition_dict = dict()
+
+    def append_photon(self, photon):
+        if self.condition_dict:
+            for cond, val in self.condition_dict.items():
+                for key, pval in photon.__dict__.items():
+                    if cond==key:
+                        if pval>=val:
+                            self.photons = numpy.append(self.photons, photon)
+        else:
+            self.photons = numpy.append(self.photons, photon)
+
 
     def add_photon(self, sphoton):
         new_photon = photon([0, 0, 0], [0, 0, 1])
         new_photon.set_attr( sphoton.get_attr() )
-        self.photons = numpy.append(self.photons, new_photon)
+        self.append_photon(new_photon)
 
     def distance_point_to_plane(self, pos):
         return numpy.abs(numpy.dot(self.normal, pos)-self.value)
@@ -27,14 +39,14 @@ class photon_list():
         new_photon.set_attr( sphoton.get_attr() )
         new_photon.pos = -new_photon.pos[0], new_photon.pos[1], new_photon.pos[2]
         new_photon.normal = -new_photon.normal[0], new_photon.normal[1], new_photon.normal[2]
-        self.photons = numpy.append(self.photons, new_photon)
+        self.append_photon(new_photon)
     
     def add_symmetric_yphoton(self, sphoton):
         new_photon = photon([0, 0, 0], [0, 0, 1])
         new_photon.set_attr( sphoton.get_attr() )
         new_photon.pos = new_photon.pos[0], -new_photon.pos[1], new_photon.pos[2]
         new_photon.normal = new_photon.normal[0], -new_photon.normal[1], new_photon.normal[2]
-        self.photons = numpy.append(self.photons, new_photon)
+        self.append_photon(new_photon)
 
     def avg_divergence(self, normal_ref):
         normal_ref = normal_ref / numpy.linalg.norm(normal_ref)
@@ -42,7 +54,13 @@ class photon_list():
         return vals
 
     def avg_distance_axis_z(self, c=[0, 0]):
-        vals = numpy.average([numpy.sqrt((photon.pos[0]-c[0])**2+(photon.pos[1]-c[1])**2) for photon in self.photons])
+        xc, yc = c[0], c[1]
+        vals = numpy.average([numpy.sqrt((photon.pos[0]-xc)**2+(photon.pos[1]-yc)**2) for photon in self.photons])
+        return vals
+    
+    def avg_distance_axis_y(self, c=[0, 0]):
+        xc, zc = c[0], c[1]
+        vals = numpy.average([numpy.sqrt((photon.pos[0]-xc)**2+(photon.pos[2]-zc)**2) for photon in self.photons])
         return vals
     
     def avg_position_axis(self, axis=0):
@@ -70,6 +88,11 @@ class photon():
         inc = self.normal
         inc = inc / numpy.linalg.norm(inc)
         sur_normal = self.last_surface
+        
+        if sur_normal==[0, 0, 0]:
+            print('***WARNING***: No surface normal.')
+            return False
+        
         sur_normal = sur_normal / numpy.linalg.norm(sur_normal)
         cos_ang1 = -numpy.dot(inc, sur_normal)
         if cos_ang1<0:
@@ -81,6 +104,7 @@ class photon():
         self.reflection_count+=1
 
         self.normal = refl
+        #print(self.reflection_count, inc, sur_normal, refl)
         return True
     
     def refraction(self, n2):
@@ -156,10 +180,14 @@ class Simu:
         self.x, self.y = numpy.meshgrid(self.x, self.y)
 
     def assign_normal(self, index, normal):
+        if (normal!=numpy.zeros(3)).all(): 
+            normal = normal / numpy.linalg.norm(normal)
         for i in range(3):
             self.normal[i][index[0], index[1], index[2]] = normal[i]
     
     def assign_block_normal(self, min_index, max_index, normal):
+        if (normal!=numpy.zeros(3)).all():
+            normal = normal / numpy.linalg.norm(normal)
         for i in range(3):
             self.normal[i][min_index[0]:max_index[0], min_index[1]:max_index[1], min_index[2]:max_index[2]] = normal[i]
 
@@ -314,8 +342,8 @@ class Simu:
         
 
         if 'all' in mode:
-            if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Refractive')
-            if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Reflective')
+            if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Refractive', alpha=0.01*25000/len(xrefl))
+            if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Reflective', alpha=0.01)
             if '-noplan' not in mode:
                 for index, photon_list in enumerate(self.photon_lists):
                     if photon_list.normal[2]>0:
@@ -378,6 +406,8 @@ class Simu:
         ux, uy, uz = axis
 
         xc, yc, zc = self.pos_to_grid(origin)
+        c = numpy.cos(ang)
+        s = numpy.sin(ang)
 
         pos_origin = numpy.asarray([
             [xc],
@@ -385,29 +415,36 @@ class Simu:
             [zc],
             ])
 
-        def rotate_func(p):
+        def rotate_pos(p):
             px, py, pz = p
-            c = numpy.cos(ang)
-            s = numpy.sin(ang)
-            ux, uy, uz = axis
             
             m = numpy.asarray([
                 [c+ux**2*(1-c), ux*uy*(1-c)-uz*s, ux*uz*(1-c)+uy*s],
                 [uy*ux*(1-c)+uz*s, c+uy**2*(1-c), uy*uz*(1-c)-ux*s],
                 [uz*ux*(1-c)-uy*s, uz*uy*(1-c)+ux*s, c+uz**2*(1-c)],
                 ])
-
-
             pos = numpy.asarray([
                     [px],
                     [py],
                     [pz],
                     ])
-
-
-            new_x, new_y, new_z = numpy.matmul(m, pos - pos_origin) + pos_origin
-            #return numpy.asarray([new_x, new_y, new_z])
             return (numpy.matmul(m, pos - pos_origin) + pos_origin).T
+        
+        def rotate_normal(nor):
+            nx, ny, nz = nor
+            
+            m = numpy.asarray([
+                [c+ux**2*(1-c), ux*uy*(1-c)-uz*s, ux*uz*(1-c)+uy*s],
+                [uy*ux*(1-c)+uz*s, c+uy**2*(1-c), uy*uz*(1-c)-ux*s],
+                [uz*ux*(1-c)-uy*s, uz*uy*(1-c)+ux*s, c+uz**2*(1-c)],
+                ])
+            normal = numpy.asarray([
+                    [nx],
+                    [ny],
+                    [nz],
+                    ])
+            return (numpy.matmul(m, normal).T)
+
 
         points_to_rotate = None
         index_to_rotate = None
@@ -418,13 +455,13 @@ class Simu:
                 for z, irefr in enumerate(yz):
                     if irefr != 1:
                         if points_to_rotate is None:
-                            points_to_rotate = numpy.asarray(rotate_func([x, y, z]))
+                            points_to_rotate = numpy.asarray(rotate_pos([x, y, z]))
                             index_to_rotate = numpy.asarray(irefr)
-                            normal_to_rotate = numpy.asarray([self.normal[:, x, y, z]])
+                            normal_to_rotate = numpy.asarray(rotate_normal(self.normal[:, x, y, z]))
                         
-                        points_to_rotate = numpy.append(points_to_rotate, rotate_func([x, y, z]), axis=0)
+                        points_to_rotate = numpy.append(points_to_rotate, rotate_pos([x, y, z]), axis=0)
                         index_to_rotate = numpy.append(index_to_rotate, irefr)
-                        normal_to_rotate = numpy.append(normal_to_rotate, [self.normal[:, x, y, z]], axis=0)
+                        normal_to_rotate = numpy.append(normal_to_rotate, rotate_normal(self.normal[:, x, y, z]), axis=0)
                         
                         self.assign_n([x, y, z], 1.0)
                         self.assign_normal([x, y, z], [0, 0, 0])
@@ -569,8 +606,10 @@ class Simu:
             if planes.distance_point_to_plane(pos)<=self.res/2.0:
                 planes.add_photon(photon)
 
-    def create_analysis_plan(self, normal, value):
-        self.photon_lists = numpy.append(self.photon_lists, photon_list(normal, value))
+    def create_analysis_plan(self, normal, value, **kargs):
+        plist = photon_list(normal, value)
+        plist.condition_dict = kargs
+        self.photon_lists = numpy.append(self.photon_lists, plist)
     
     def run_photon(self, photon_list, index):
         for photon in tqdm(photon_list, desc=f'Running'):
