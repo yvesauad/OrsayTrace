@@ -62,10 +62,12 @@ class photon_list():
         return vals
 
     def get_relative_centroid_positions(self):
+        #Relative position to centroid for each photon
         vals = self.get_positions() - self.avg_position()
         return vals
 
     def get_relative_centroid_distances(self):
+        #Relative distance to centroid for each photon
         vals = numpy.sqrt(numpy.sum(numpy.power(self.get_relative_centroid_positions(), 2), axis=1))
         return vals
 
@@ -103,10 +105,18 @@ class photon_list():
         return vals
     
     def avg_distance_axis_y(self, c=[0, 0]):
+        #Average relative distance to given point in a given axis for each photon
         xc, zc = c[0], c[1]
         vals = numpy.average([numpy.sqrt((photon.pos[0]-xc)**2+(photon.pos[2]-zc)**2) for photon in self.photons])
         return vals
     
+    def get_weighted_inverse_axis_y(self, c=[0, 0]):
+        assert (self.normal == [0, 1, 0]).all()
+        pos = self.get_positions() - numpy.asarray([c[0], self.value, c[1]])
+        dist = numpy.sqrt(numpy.sum(numpy.power(pos, 2), axis=1))
+        wi = numpy.divide(self.get_intensities(), dist)
+        avg_wi = numpy.average(wi)
+        return avg_wi
 
 
 class photon():
@@ -387,7 +397,8 @@ class Simu:
         
 
         if 'all' in mode:
-            if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Refractive', alpha=0.01*25000/len(xrefl))
+            print(len(xrefl))
+            if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Refractive', alpha=0.01)
             if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Reflective', alpha=0.01)
             if '-noplan' not in mode:
                 for index, photon_list in enumerate(self.photon_lists):
@@ -473,7 +484,7 @@ class Simu:
                     [py],
                     [pz],
                     ])
-            return (numpy.matmul(m, pos - pos_origin) + pos_origin).T
+            return numpy.asarray((numpy.matmul(m, pos - pos_origin) + pos_origin).T)
         
         def rotate_normal(nor):
             nx, ny, nz = nor
@@ -514,21 +525,26 @@ class Simu:
                                         points_to_rotate = numpy.asarray(rotate_pos([x, y, z]))
                                         index_to_rotate = numpy.asarray(irefr)
                                         normal_to_rotate = numpy.asarray(rotate_normal(self.normal[:, x, y, z]))
-                                    
-                                    points_to_rotate = numpy.append(points_to_rotate, rotate_pos([x, y, z]), axis=0)
-                                    index_to_rotate = numpy.append(index_to_rotate, irefr)
-                                    normal_to_rotate = numpy.append(normal_to_rotate, rotate_normal(self.normal[:, x, y, z]), axis=0)
+                                    else:
+                                        if rotate_pos([x, y, z]).tolist() in points_to_rotate.tolist():
+                                            print('***WARNING***: Rotation gives a repetead index')
+                                            
+                                        points_to_rotate = numpy.append(points_to_rotate, rotate_pos([x, y, z]), axis=0)
+                                        index_to_rotate = numpy.append(index_to_rotate, irefr)
+                                        normal_to_rotate = numpy.append(normal_to_rotate, rotate_normal(self.normal[:, x, y, z]), axis=0)
                                 
-                                    self.assign_n([x, y, z], 1.0)
-                                    self.assign_normal([x, y, z], [0, 0, 0])
+                                        self.assign_n([x, y, z], 1.0)
+                                        self.assign_normal([x, y, z], [0, 0, 0])
 
         if points_to_rotate is None:
             raise Exception('There is nothing to rotate. Please check your elements in simulation cell or ROI.')
-
+        
         for j, index_point in enumerate(points_to_rotate):
             ix, iy, iz = index_point
             ind_refr = index_to_rotate[j]
             normal = normal_to_rotate[j]
+            if self.index[int(ix), int(iy), int(iz)] == ind_refr: 
+                print('**WARNING***: Duplicate in rotation. Lossing those points: ', ix, iy, iz, ind_refr)
             self.assign_n([int(ix), int(iy), int(iz)], ind_refr)
             self.assign_normal([int(ix), int(iy), int(iz)], normal)
 
