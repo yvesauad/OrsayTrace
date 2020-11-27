@@ -1,4 +1,5 @@
-# OrsayTrace
+OrsayTrace
+------------
 
 Orsaytrace is an open source python library for flexible optical simulations in 3D dimensions. 
 
@@ -6,6 +7,7 @@ Orsaytrace makes it easy to add elements or transformations sequentially. Multip
 
 Data analysis are done by the means of plans, which save the photons that cross them during simulation running. A pletora of pre build functions are already implemented for photons subset, but users can build their own using all available photon objects.
 
-# Contributing 
+Contributing 
+------------
 
 Contributing is encouraged for everyone. Please be in touch if you wish to help.
