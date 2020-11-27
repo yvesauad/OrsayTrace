@@ -5,7 +5,7 @@ setup(
         version = '1.0.8',
         license = 'MIT',
         description = 'Flexible ray tracing for optics',
-        long_description = open('README.md').read(),
+        long_description = open('README.rst').read(),
         long_description_content_type = 'text/markdown',
         author = 'Yves Auad',
         author_email = 'yves.maia-auad@universite-paris-saclay.fr',
