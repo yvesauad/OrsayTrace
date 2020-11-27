@@ -61,8 +61,20 @@ class photon_list():
         vals = numpy.asarray([photon.pos for photon in self.photons])
         return vals
 
+    def get_relative_centroid_positions(self):
+        vals = self.get_positions() - self.avg_position()
+        return vals
+
+    def get_relative_centroid_distances(self):
+        vals = numpy.sqrt(numpy.sum(numpy.power(self.get_relative_centroid_positions(), 2), axis=1))
+        return vals
+
+    def get_intensities(self):
+        vals = numpy.asarray([photon.intensity for photon in self.photons])
+        return vals
+
     def avg_position(self):
-        vals = [numpy.average([photon.pos[axis] for photon in self.photons]) for axis in range(3)]
+        vals = numpy.asarray([numpy.average([photon.pos[axis] for photon in self.photons]) for axis in range(3)])
         return vals
     
     def max_position(self):
@@ -76,7 +88,15 @@ class photon_list():
     def std_position(self):
         vals = [numpy.std([photon.pos[axis] for photon in self.photons]) for axis in range(3)]
         return vals
-    
+
+    def get_weighted_inverse(self):
+        vals = numpy.divide(self.get_intensities(), self.get_relative_centroid_distances())
+        return vals
+
+    def get_average_weighted_inverse(self):
+        vals = numpy.average(self.get_weighted_inverse())
+        return vals
+
     def avg_distance_axis_z(self, c=[0, 0]):
         xc, yc = c[0], c[1]
         vals = numpy.average([numpy.sqrt((photon.pos[0]-xc)**2+(photon.pos[1]-yc)**2) for photon in self.photons])
