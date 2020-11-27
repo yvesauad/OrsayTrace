@@ -57,6 +57,26 @@ class photon_list():
         vals = numpy.average([numpy.dot(photon.normal, normal_ref)**2 for photon in self.photons])
         return vals
 
+    def get_positions(self):
+        vals = numpy.asarray([photon.pos for photon in self.photons])
+        return vals
+
+    def avg_position(self):
+        vals = [numpy.average([photon.pos[axis] for photon in self.photons]) for axis in range(3)]
+        return vals
+    
+    def max_position(self):
+        vals = [numpy.amax([photon.pos[axis] for photon in self.photons]) for axis in range(3)]
+        return vals
+    
+    def min_position(self):
+        vals = [numpy.amin([photon.pos[axis] for photon in self.photons]) for axis in range(3)]
+        return vals
+    
+    def std_position(self):
+        vals = [numpy.std([photon.pos[axis] for photon in self.photons]) for axis in range(3)]
+        return vals
+    
     def avg_distance_axis_z(self, c=[0, 0]):
         xc, yc = c[0], c[1]
         vals = numpy.average([numpy.sqrt((photon.pos[0]-xc)**2+(photon.pos[1]-yc)**2) for photon in self.photons])
@@ -67,15 +87,13 @@ class photon_list():
         vals = numpy.average([numpy.sqrt((photon.pos[0]-xc)**2+(photon.pos[2]-zc)**2) for photon in self.photons])
         return vals
     
-    def avg_position_axis(self, axis=0):
-        vals = numpy.average([photon.pos[axis] for photon in self.photons])
-        return vals
+
 
 class photon():
     def __init__(self, pos, normal, intensity=1.):
         self.pos = pos
         self.normal = normal / numpy.linalg.norm(normal)
-        self.intensity = 1. / (numpy.exp(pos[0]**2) + numpy.exp(pos[1]**2))
+        self.intensity = 1.
         self.n = 1.00
         self.last_surface = [0, 0, 0]
         self.refraction_count = 0
@@ -108,7 +126,7 @@ class photon():
         self.reflection_count+=1
 
         self.normal = refl
-        print(self.reflection_count, inc, sur_normal, refl, self.pos)
+        #print(self.reflection_count, inc, sur_normal, refl, self.pos)
         return True
     
     def refraction(self, n2):
@@ -408,7 +426,7 @@ class Simu:
                             self.photons.append(photon([xpos, -ypos+2*yc, zc], normal2))
                             self.photons.append(photon([-xpos+2*xc, -ypos+2*yc, zc], normal2))
     
-    def rotate(self, ang, axis, origin):
+    def rotate(self, ang, axis, origin, ROI = None):
         axis = axis / numpy.linalg.norm(axis)
         ux, uy, uz = axis
 
@@ -453,26 +471,39 @@ class Simu:
             return (numpy.matmul(m, normal).T)
 
 
+        if ROI is not None:
+            xmin, xmax, ymin, ymax, zmin, zmax = ROI
+        else:
+            xmin, xmax, ymin, ymax, zmin, zmax = -self.grid[0]/2, self.grid[0]/2.0, -self.grid[1]/2.0, self.grid[1]/2.0, -self.grid[2]/2.0, self.grid[2]/2.0
+        min_index = self.pos_to_grid([xmin, ymin, zmin])
+        max_index = self.pos_to_grid([xmax, ymax, zmax])
+
+
         points_to_rotate = None
         index_to_rotate = None
         normal_to_rotate = None
 
-        for x, xyz in enumerate(self.index):
-            for y, yz in enumerate(xyz):
-                for z, irefr in enumerate(yz):
-                    if irefr != 1:
-                        if points_to_rotate is None:
-                            points_to_rotate = numpy.asarray(rotate_pos([x, y, z]))
-                            index_to_rotate = numpy.asarray(irefr)
-                            normal_to_rotate = numpy.asarray(rotate_normal(self.normal[:, x, y, z]))
-                        
-                        points_to_rotate = numpy.append(points_to_rotate, rotate_pos([x, y, z]), axis=0)
-                        index_to_rotate = numpy.append(index_to_rotate, irefr)
-                        normal_to_rotate = numpy.append(normal_to_rotate, rotate_normal(self.normal[:, x, y, z]), axis=0)
-                        
-                        self.assign_n([x, y, z], 1.0)
-                        self.assign_normal([x, y, z], [0, 0, 0])
+        for x, xyz in tqdm(enumerate(self.index), desc='Rotate: '):
+            if max_index[0]>=x>=min_index[0]:
+                for y, yz in enumerate(xyz):
+                    if max_index[1]>=y>=min_index[1]:
+                        for z, irefr in enumerate(yz):
+                            if max_index[2]>=z>=min_index[2]:
+                                if irefr != 1:
+                                    if points_to_rotate is None:
+                                        points_to_rotate = numpy.asarray(rotate_pos([x, y, z]))
+                                        index_to_rotate = numpy.asarray(irefr)
+                                        normal_to_rotate = numpy.asarray(rotate_normal(self.normal[:, x, y, z]))
+                                    
+                                    points_to_rotate = numpy.append(points_to_rotate, rotate_pos([x, y, z]), axis=0)
+                                    index_to_rotate = numpy.append(index_to_rotate, irefr)
+                                    normal_to_rotate = numpy.append(normal_to_rotate, rotate_normal(self.normal[:, x, y, z]), axis=0)
+                                
+                                    self.assign_n([x, y, z], 1.0)
+                                    self.assign_normal([x, y, z], [0, 0, 0])
 
+        if points_to_rotate is None:
+            raise Exception('There is nothing to rotate. Please check your elements in simulation cell or ROI.')
 
         for j, index_point in enumerate(points_to_rotate):
             ix, iy, iz = index_point
@@ -549,7 +580,7 @@ class Simu:
         z = [z for z in numpy.arange(zc-zl, zc+self.res, self.res/self.ss) if abs(z)<self.size[2]/2. and abs(-z+2*zc)<self.size[2]/2.]
         
         min_index = self.pos_to_grid([min(x), min(y), min(z)])
-        max_index = self.pos_to_grid([-min(x)+2*xc, -min(y)+2*yc, -min(z)+2*zc])
+        max_index = self.pos_to_grid([-min(x)+2*xc+1, -min(y)+2*yc+1, -min(z)+2*zc+1])
         
         self.assign_block_n(min_index, max_index, n)
         self.assign_block_normal(min_index, max_index, normal)

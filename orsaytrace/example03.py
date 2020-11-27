@@ -25,7 +25,7 @@ for z in z_array:
     a.create_analysis_plan([-na, 0, 1], z)
 
 photon_lists = a.run()
-a.show_elements(photon_lists, 'all')
+a.show_elements(photon_lists, 'all-noplan')
 
 div_z = numpy.asarray([])
 div_tilted = numpy.asarray([])
