@@ -39,7 +39,7 @@ std = numpy.asarray([photon_list.std_position() for photon_list in photon_lists]
 
 
 list_number = (numpy.where(std[:, 0]==min(std[:, 0])))[0][0]
-fac = 20
+fac = 10
 
 fig, axes = plt.subplots(nrows=2, ncols=3, sharex=False, sharey=False)
 axes[0, 0].plot(y_array, avg[:, 0], label='avg(X)')

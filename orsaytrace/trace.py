@@ -397,9 +397,8 @@ class Simu:
         
 
         if 'all' in mode:
-            print(len(xrefl))
-            if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Refractive', alpha=0.01)
-            if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Reflective', alpha=0.01)
+            if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Refractive', alpha=0.1)
+            if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Reflective', alpha=0.1)
             if '-noplan' not in mode:
                 for index, photon_list in enumerate(self.photon_lists):
                     if photon_list.normal[2]>0:
@@ -506,6 +505,8 @@ class Simu:
             xmin, xmax, ymin, ymax, zmin, zmax = ROI
         else:
             xmin, xmax, ymin, ymax, zmin, zmax = -self.grid[0]/2, self.grid[0]/2.0, -self.grid[1]/2.0, self.grid[1]/2.0, -self.grid[2]/2.0, self.grid[2]/2.0
+        
+
         min_index = self.pos_to_grid([xmin, ymin, zmin])
         max_index = self.pos_to_grid([xmax, ymax, zmax])
 
@@ -530,7 +531,9 @@ class Simu:
                                             print('***WARNING***: Rotation gives a repetead index')
                                             
                                         points_to_rotate = numpy.append(points_to_rotate, rotate_pos([x, y, z]), axis=0)
+                                        
                                         index_to_rotate = numpy.append(index_to_rotate, irefr)
+                                        
                                         normal_to_rotate = numpy.append(normal_to_rotate, rotate_normal(self.normal[:, x, y, z]), axis=0)
                                 
                                         self.assign_n([x, y, z], 1.0)
@@ -538,7 +541,6 @@ class Simu:
 
         if points_to_rotate is None:
             raise Exception('There is nothing to rotate. Please check your elements in simulation cell or ROI.')
-        
         for j, index_point in enumerate(points_to_rotate):
             ix, iy, iz = index_point
             ind_refr = index_to_rotate[j]
@@ -564,12 +566,10 @@ class Simu:
         x = numpy.arange(xmin, x0+self.res, self.res/self.ss)
         y = numpy.arange(ymin, y0+self.res, self.res/self.ss)
         z = numpy.arange(zmin, z0+self.res, self.res/self.ss)
-        
         for xpos in tqdm(x, desc='Parabolic'):
             for ypos in y:
                 for zpos in z:
-                    if (zpos-z0)>(-1/(2*pp))*((ypos-y0)**2+(xpos-x0)**2):
-                        
+                    if abs(zpos-z0-(-1/(2*pp))*((ypos-y0)**2+(xpos-x0)**2))<=self.res:
                         assign([xpos, ypos, zpos])
                         assign([xpos, -ypos+2*y0, zpos])
                         
