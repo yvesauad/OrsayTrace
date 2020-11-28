@@ -2,14 +2,14 @@ import trace as ot
 import numpy
 import matplotlib.pyplot as plt
 
-x, y, z, res = 5, 5, 10, 0.05
+x, y, z, res = 5, 5, 10, 0.01
 
 
 focus = 0.3
 yvertex = 0.5+0.3
 thickness = 1.2
 p = 2.0
-r = 0.25
+r = 0.2
 
 xmax, xmin, zmax, zmin = 0.45, -0.45, -0.25, -2.0
 
@@ -20,8 +20,8 @@ a = ot.Simu(x, y, z, res)
 a.point_source(r, [0, 0, -z/2], [0, 0, 1])
 
 a.create_parabolic_section_element([0.0, yvertex, 0.0], -1.0, 2*thickness, 3.0, p) 
-a.create_rectangle_element([-x/2, x/2, yvertex-focus, y/2, -z/2, z/2], 1.0, [0, 0, 0]) 
-a.rotate(numpy.pi/32, [1, 0, 0], [0, yvertex, 0.0])
+#a.create_rectangle_element([-x/2, x/2, yvertex-focus, y/2, -z/2, z/2], 1.0, [0, 0, 0]) 
+#a.rotate(numpy.pi/32, [0, 1, 0], [0, yvertex, 0.0], [-1.5, 1.5, -1.5, 1.5, -1.5, 1.5])
 
 for y in y_array:
     a.create_analysis_plan([0, 1, 0], y, reflection_count = 1)

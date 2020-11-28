@@ -224,7 +224,7 @@ class Simu:
     def __init__(self, x, y, z, res):
         self.size = [x, y, z]
         self.res = res
-        self.ss = 2. #sub sampling for creating elements
+        self.ss = 2.01 #sub sampling for creating elements
         self.grid = (int(x/res), int(y/res), int(z/res))
         self.index = numpy.ones(self.grid)
         self.normal = numpy.asarray([numpy.zeros(self.grid), numpy.zeros(self.grid), numpy.zeros(self.grid)])
@@ -253,13 +253,12 @@ class Simu:
         self.index[min_index[0]:max_index[0], min_index[1]:max_index[1], min_index[2]:max_index[2]] = value
 
     def pos_to_grid_1D(self, value, index):
-        return int((value/(self.size[index]/2.)+1)/2*self.grid[index])
+        return round((value/(self.size[index]/2.)+1)/2*self.grid[index])
         
 
     def pos_to_grid(self, pos):
         #this returns relative current photon position from [0:self.grid]
-
-        indexes = [int((pos[i]/(self.size[i]/2.)+1)/2*self.grid[i]) for i in range(3)]
+        indexes = [round((pos[i]/(self.size[i]/2.)+1)/2*self.grid[i]) for i in range(3)]
         return indexes
 
     def grid_to_pos(self, grid):
@@ -269,7 +268,7 @@ class Simu:
     def index_from_pos(self, pos):
         #this returns current index of refraction of a given photon in a given position
 
-        indexes = [int((pos[i]/(self.size[i]/2.)+1)/2*self.grid[i]) for i in range(3)]
+        indexes = [round((pos[i]/(self.size[i]/2.)+1)/2*self.grid[i]) for i in range(3)]
         return self.index[indexes[0], indexes[1], indexes[2]]
 
     def normal_from_pos(self, pos):
@@ -345,8 +344,8 @@ class Simu:
         unpack_photons(self.photons)
 
         if 'all' in mode:
-            if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Refractive')
-            if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Reflective')
+            if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Reflective')
+            if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Refractive')
             if '-noplan' not in mode:
                 for index, photon_list in enumerate(self.photon_lists):
                     ax.plot_surface(self.x, (photon_list.value-photon_list.normal[0]*self.x-photon_list.normal[1]*self.y)/photon_list.normal[2], self.y, color='yellow', alpha=0.2)
@@ -397,8 +396,8 @@ class Simu:
         
 
         if 'all' in mode:
-            if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Refractive', alpha=0.1)
-            if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Reflective', alpha=0.1)
+            if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Reflective', alpha=0.1)
+            if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Refractive', alpha=0.1)
             if '-noplan' not in mode:
                 for index, photon_list in enumerate(self.photon_lists):
                     if photon_list.normal[2]>0:
@@ -460,7 +459,7 @@ class Simu:
         axis = axis / numpy.linalg.norm(axis)
         ux, uy, uz = axis
 
-        xc, yc, zc = self.pos_to_grid(origin)
+        xc, yc, zc = origin
         c = numpy.cos(ang)
         s = numpy.sin(ang)
 
@@ -504,7 +503,7 @@ class Simu:
         if ROI is not None:
             xmin, xmax, ymin, ymax, zmin, zmax = ROI
         else:
-            xmin, xmax, ymin, ymax, zmin, zmax = -self.grid[0]/2, self.grid[0]/2.0, -self.grid[1]/2.0, self.grid[1]/2.0, -self.grid[2]/2.0, self.grid[2]/2.0
+            xmin, xmax, ymin, ymax, zmin, zmax = -self.size[0]/2, self.size[0]/2.0-self.res, -self.size[0]/2.0, self.size[0]/2.0-self.res, -self.size[0]/2.0, self.size[0]/2.0-self.res
         
 
         min_index = self.pos_to_grid([xmin, ymin, zmin])
@@ -515,40 +514,39 @@ class Simu:
         index_to_rotate = None
         normal_to_rotate = None
 
-        for x, xyz in tqdm(enumerate(self.index), desc='Rotate: '):
-            if max_index[0]>=x>=min_index[0]:
-                for y, yz in enumerate(xyz):
-                    if max_index[1]>=y>=min_index[1]:
-                        for z, irefr in enumerate(yz):
-                            if max_index[2]>=z>=min_index[2]:
-                                if irefr != 1:
-                                    if points_to_rotate is None:
-                                        points_to_rotate = numpy.asarray(rotate_pos([x, y, z]))
-                                        index_to_rotate = numpy.asarray(irefr)
-                                        normal_to_rotate = numpy.asarray(rotate_normal(self.normal[:, x, y, z]))
-                                    else:
-                                        if rotate_pos([x, y, z]).tolist() in points_to_rotate.tolist():
-                                            print('***WARNING***: Rotation gives a repetead index')
-                                            
-                                        points_to_rotate = numpy.append(points_to_rotate, rotate_pos([x, y, z]), axis=0)
-                                        
-                                        index_to_rotate = numpy.append(index_to_rotate, irefr)
-                                        
-                                        normal_to_rotate = numpy.append(normal_to_rotate, rotate_normal(self.normal[:, x, y, z]), axis=0)
+        x = numpy.arange(xmin, xmax+self.res, self.res/self.ss)
+        y = numpy.arange(ymin, ymax+self.res, self.res/self.ss)
+        z = numpy.arange(zmin, zmax+self.res, self.res/self.ss)
+        
+        for xpos in tqdm(x, desc='Rotate: '):
+            for ypos in y:
+                for zpos in z:
+                    if self.index_from_pos([xpos, ypos, zpos]) != 1:
+                        if points_to_rotate is None:
+                            points_to_rotate = numpy.asarray(rotate_pos([xpos, ypos, zpos]))
+                            index_to_rotate = numpy.asarray(self.index_from_pos([xpos, ypos, zpos]))
+                            normal_to_rotate = numpy.asarray(rotate_normal(self.normal_from_pos([xpos, ypos, zpos])))
+                        else:
+                            points_to_rotate = numpy.append(points_to_rotate, rotate_pos([xpos, ypos, zpos]), axis=0)
+                            index_to_rotate = numpy.append(index_to_rotate, self.index_from_pos([xpos, ypos, zpos]))
+                            normal_to_rotate = numpy.append(normal_to_rotate, rotate_normal(self.normal_from_pos([xpos, ypos, zpos])), axis=0)
                                 
-                                        self.assign_n([x, y, z], 1.0)
-                                        self.assign_normal([x, y, z], [0, 0, 0])
+                            index = self.pos_to_grid([xpos, ypos, zpos])
+                            self.assign_n(index, 1.0)
+                            self.assign_normal(index, [0, 0, 0])
 
         if points_to_rotate is None:
             raise Exception('There is nothing to rotate. Please check your elements in simulation cell or ROI.')
+
         for j, index_point in enumerate(points_to_rotate):
-            ix, iy, iz = index_point
+            xpos, ypos, zpos = index_point
             ind_refr = index_to_rotate[j]
             normal = normal_to_rotate[j]
-            if self.index[int(ix), int(iy), int(iz)] == ind_refr: 
-                print('**WARNING***: Duplicate in rotation. Lossing those points: ', ix, iy, iz, ind_refr)
-            self.assign_n([int(ix), int(iy), int(iz)], ind_refr)
-            self.assign_normal([int(ix), int(iy), int(iz)], normal)
+            #if self.index_from_pos([xpos, ypos, zpos]) == ind_refr: 
+            #    print('**WARNING***: Duplicate in rotation. Losing those points: ', self.pos_to_grid([xpos, ypos, zpos]), [xpos, ypos, zpos], ind_refr)
+            grid_pos = self.pos_to_grid([xpos, ypos, zpos])
+            self.assign_n(grid_pos, ind_refr)
+            self.assign_normal(grid_pos, normal)
 
     def create_parabolic_section_element(self, c, n, th, wid, pp):
         
@@ -563,18 +561,23 @@ class Simu:
         xmax = x0 + 0.5*wid; xmin = x0 - 0.5*wid
         zmax = z0; zmin = z0 - (1/2*pp)*(max(abs(ymax-y0), abs(ymin-y0))**2+max(abs(xmax-x0), abs(xmin-x0))**2)
         
-        x = numpy.arange(xmin, x0+self.res, self.res/self.ss)
-        y = numpy.arange(ymin, y0+self.res, self.res/self.ss)
-        z = numpy.arange(zmin, z0+self.res, self.res/self.ss)
+        x = numpy.arange(x0, xmax, self.res/self.ss)
+        y = numpy.arange(y0, ymax, self.res/self.ss)
+        z = numpy.arange(zmin, z0, self.res/self.ss)
         for xpos in tqdm(x, desc='Parabolic'):
             for ypos in y:
                 for zpos in z:
                     if abs(zpos-z0-(-1/(2*pp))*((ypos-y0)**2+(xpos-x0)**2))<=self.res:
                         assign([xpos, ypos, zpos])
-                        assign([xpos, -ypos+2*y0, zpos])
-                        
                         assign([-xpos+2*x0, ypos, zpos])
+                        assign([xpos, -ypos+2*y0, zpos])
                         assign([-xpos+2*x0, -ypos+2*y0, zpos])
+
+        
+    def create_sphere_element(self, c, r, n):
+        
+        def assign(pos):
+            xpos, ypos, zpos = pos
 
 
     def create_sphere_element(self, c, r, n):
