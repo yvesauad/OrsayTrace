@@ -719,11 +719,6 @@ class Simu:
 
         self.run_photon(self.photons[run_index], run_index)
 
-        #with ProcessPoolExecutor(max_workers=n) as executor:
-        #for list_number, splited_lists in enumerate(self.photons):
-        #    #future = executor.submit(self.run_photon, splited_lists)
-        #    self.run_photon(splited_lists, list_number)
-        
         for index, photon_list in enumerate(self.photon_lists):
             for photon in photon_list.photons:
                 if xsym: self.photon_lists[index].add_symmetric_xphoton(photon)
@@ -734,8 +729,11 @@ class Simu:
 
         return self.photon_lists
 
-    def result(self):
-        return self.photon_lists
+    def merge_photon_lists(self, pls1, pls2):
+        for index, photon_list in enumerate(pls1):
+            for photon in photon_list.photons:
+                pls2[index].append_photon(photon)
+        return pls2
 
     def reset(self):
         pass

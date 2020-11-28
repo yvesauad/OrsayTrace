@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import concurrent.futures
 import time
 
-x, y, z, res = 5, 5, 10, 0.1
+x, y, z, res = 5, 5, 5, 0.01
 
 
 focus = 0.3
@@ -17,14 +17,16 @@ xmax, xmin, zmax, zmin = 0.45, -0.45, -0.25, -2.0
 
 y_array = numpy.linspace(0, y/4, 101)
 
+cores = 3
+
 if __name__ == "__main__":
-    with concurrent.futures.ProcessPoolExecutor(max_workers = 4) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers = cores) as executor:
 
         a = ot.Simu(x, y, z, res)
 
         a.point_source(r, [0, 0, -z/2], [0, 0, 1])
 
-        a.create_parabolic_section_element([0.0, yvertex, 0.0], -1.0, 2*thickness, 3.0, p) 
+        #a.create_parabolic_section_element([0.0, yvertex, 0.0], -1.0, 2*thickness, 3.0, p) 
         #a.create_rectangle_element([-x/2, x/2, yvertex-focus, y/2, -z/2, z/2], 1.0, [0, 0, 0]) 
         #a.rotate(numpy.pi/32, [0, 1, 0], [0, yvertex, 0.0], [-1.5, 1.5, -1.5, 1.5, -1.5, 1.5])
 
@@ -33,17 +35,19 @@ if __name__ == "__main__":
 
         #a.show_created_elements('all-noplan')
         
-        future_values = {executor.submit(a.run, i, 100, False, False): i for i in [0, 1]}
-        #future1 = executor.submit(a.run, 1, 4, False, False)
-        #future2 = executor.submit(a.run, 2, 4, False, False)
-        #future3 = executor.submit(a.run, 3, 4, False, False)
+        future_values = [executor.submit(a.run, i, cores, False, False) for i in numpy.arange(0, cores)]
         
-        for future in concurrent.futures.as_completed(future_values):
-            print(len(future.result()))
+        pls = list()
+        for futures in future_values:
+            pls.append(futures.result())
+        
+        #new_photon_list = a.merge_photon_lists(pls[0], pls[1])
+        #new_photon_list = a.merge_photon_lists(new_photon_list, pls[2])
+        #new_photon_list = a.merge_photon_lists(new_photon_list, pls[3])
+        
 
-
-        a.show_elements(future.result(), 'all-noplan')
-        #a.show_elements(future1.result(), 'all-noplan')
+        #a.show_elements(futures.result(), 'all-noplan')
+        #a.show_elements(new_photon_list, 'all-noplan')
 
 
 
