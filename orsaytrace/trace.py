@@ -703,8 +703,9 @@ class Simu:
                 self.check_analysis_plan(photon)
 
 
-    def run(self, xsym=False, ysym=False):
-        n = 1
+    def run(self, run_index=0, split=1, xsym=False, ysym=False):
+        assert run_index<split
+        n = split
 
         if xsym:
             self.photons = [photons for photons in self.photons if (photons.pos[0]>=0. and numpy.dot(photons.normal, [1, 0, 0])>=0.)]
@@ -716,11 +717,13 @@ class Simu:
         self.photons = numpy.asarray(self.photons)
         self.photons = numpy.array_split(self.photons, n)
 
-        #with ThreadPoolExecutor(max_workers=n) as executor:
-        for list_number, splited_lists in enumerate(self.photons):
-            #future = executor.submit(self.run_photon, splited_lists)
-            self.run_photon(splited_lists, list_number)
+        self.run_photon(self.photons[run_index], run_index)
 
+        #with ProcessPoolExecutor(max_workers=n) as executor:
+        #for list_number, splited_lists in enumerate(self.photons):
+        #    #future = executor.submit(self.run_photon, splited_lists)
+        #    self.run_photon(splited_lists, list_number)
+        
         for index, photon_list in enumerate(self.photon_lists):
             for photon in photon_list.photons:
                 if xsym: self.photon_lists[index].add_symmetric_xphoton(photon)
@@ -729,6 +732,9 @@ class Simu:
             for photon in photon_list.photons:
                 if ysym: self.photon_lists[index].add_symmetric_yphoton(photon)
 
+        return self.photon_lists
+
+    def result(self):
         return self.photon_lists
 
     def reset(self):
