@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import concurrent.futures
 import time
 
-x, y, z, res = 5, 5, 5, 0.01
+x, y, z, res = 5, 5, 5, 0.02
 
 
 focus = 0.3
@@ -15,9 +15,9 @@ r = 0.2
 
 xmax, xmin, zmax, zmin = 0.45, -0.45, -0.25, -2.0
 
-y_array = numpy.linspace(0, y/4, 101)
+y_array = numpy.linspace(0, y/4, 31)
 
-cores = 3
+cores = 4
 
 if __name__ == "__main__":
     with concurrent.futures.ProcessPoolExecutor(max_workers = cores) as executor:
@@ -31,19 +31,15 @@ if __name__ == "__main__":
         #a.rotate(numpy.pi/32, [0, 1, 0], [0, yvertex, 0.0], [-1.5, 1.5, -1.5, 1.5, -1.5, 1.5])
 
         for y in y_array:
-            a.create_analysis_plan([0, 1, 0], y, reflection_count = 1)
+            a.create_analysis_plan([0, 0, 1], y, reflection_count = 0)
 
         #a.show_created_elements('all-noplan')
         
         future_values = [executor.submit(a.run, i, cores, False, False) for i in numpy.arange(0, cores)]
         
-        pls = list()
-        for futures in future_values:
-            pls.append(futures.result())
+        for index, futures in enumerate(future_values):
+            new_photon_list = a.merge_photon_lists(futures.result())
         
-        #new_photon_list = a.merge_photon_lists(pls[0], pls[1])
-        #new_photon_list = a.merge_photon_lists(new_photon_list, pls[2])
-        #new_photon_list = a.merge_photon_lists(new_photon_list, pls[3])
         
 
         #a.show_elements(futures.result(), 'all-noplan')

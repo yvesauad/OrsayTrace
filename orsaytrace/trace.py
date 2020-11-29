@@ -681,9 +681,9 @@ class Simu:
         else:
             return False
 
-    def check_analysis_plan(self, photon):
+    def check_analysis_plan(self, photon, rindex):
         pos = photon.pos
-        for index, planes in enumerate(self.photon_lists):
+        for index, planes in enumerate(self.split_photon_lists[rindex]):
             if planes.distance_point_to_plane(pos)<=self.res/2.0:
                 planes.add_photon(photon)
 
@@ -692,15 +692,15 @@ class Simu:
         plist.condition_dict = kargs
         self.photon_lists = numpy.append(self.photon_lists, plist)
     
-    def run_photon(self, photon_list, index):
-        for photon in tqdm(photon_list, desc=f'Running'):
+    def run_photon(self, photon_list, rindex):
+        for photon in tqdm(photon_list[rindex], desc=f'Running'):
             while True:
                 if photon.update(self.normal_and_index_from_pos(photon.pos)): photon.move(self.res)
                 photon.move(self.res)
                 if not self.is_photon_in_cell(photon):
-                    self.photons[index] = [photons for photons in self.photons[index] if photons!=photon]
+                    self.photons[rindex] = [photons for photons in self.photons[rindex] if photons!=photon]
                     break
-                self.check_analysis_plan(photon)
+                self.check_analysis_plan(photon, rindex)
 
 
     def run(self, run_index=0, split=1, xsym=False, ysym=False):
@@ -717,7 +717,9 @@ class Simu:
         self.photons = numpy.asarray(self.photons)
         self.photons = numpy.array_split(self.photons, n)
 
-        self.run_photon(self.photons[run_index], run_index)
+        self.split_photon_lists = numpy.asarray([self.photon_lists for i in range(n)])
+
+        self.run_photon(self.photons, run_index)
 
         for index, photon_list in enumerate(self.photon_lists):
             for photon in photon_list.photons:
@@ -727,13 +729,13 @@ class Simu:
             for photon in photon_list.photons:
                 if ysym: self.photon_lists[index].add_symmetric_yphoton(photon)
 
-        return self.photon_lists
+        return self.split_photon_lists[run_index]
 
-    def merge_photon_lists(self, pls1, pls2):
-        for index, photon_list in enumerate(pls1):
+    def merge_photon_lists(self, my_photon_lists):
+        for index, photon_list in enumerate(my_photon_lists):
             for photon in photon_list.photons:
-                pls2[index].append_photon(photon)
-        return pls2
+                self.photon_lists[index].append_photon(photon)
+        return self.photon_lists
 
     def reset(self):
         pass
