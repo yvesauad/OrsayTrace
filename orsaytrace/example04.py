@@ -2,7 +2,7 @@ import trace as ot
 import numpy
 import matplotlib.pyplot as plt
 
-x, y, z, res = 5, 5, 10, 0.01
+x, y, z, res = 5, 5, 10, 0.05
 
 
 focus = 0.3
@@ -28,10 +28,10 @@ for y in y_array:
 
 #a.show_created_elements('all-noplan')
 photon_lists = a.run()
-a.show_elements(photon_lists, 'all-noplan')
+#a.show_elements(photon_lists, 'all-noplan')
 
 pd = numpy.asarray([photon_list.get_average_weighted_inverse() for photon_list in photon_lists])
-pdvertex = numpy.asarray([photon_list.get_weighted_inverse_axis_y([0, -p/2.])for photon_list in photon_lists])
+pdvertex = numpy.asarray([photon_list.get_average_weighted_inverse_axis_y([0, -p/2.])for photon_list in photon_lists])
 avg = numpy.asarray([photon_list.avg_position() for photon_list in photon_lists])
 pos_max = numpy.asarray([photon_list.max_position() for photon_list in photon_lists])
 pos_min = numpy.asarray([photon_list.min_position() for photon_list in photon_lists])

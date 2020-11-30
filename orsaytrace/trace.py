@@ -11,29 +11,31 @@ from concurrent.futures import ThreadPoolExecutor
 class photon_list():
     '''
     photon_list is a class that bounds photons together by a plane and a condition. Plane is characterized by a normal vector and its value.
+
     Parameters
     ----------
     normal: list
         A 3 dimensional list stating the normal vector from plane
     value: float
         The plane independent variable in the form of x + y + z = value
+
     '''
-    def __init__(self, normal: list(), value: float):
+    def __init__(self, normal: list, value: float):
         self.normal = normal / numpy.linalg.norm(normal)
         self.value = value
         self.photons = numpy.asarray([])
         self.condition_dict = dict()
 
-    def append_photon(self, photon: class.photon):
-    '''
-    Append a photon tp the photon_list given that the condition is True
+    def append_photon(self, photon):
+        '''
+        Append a photon tp the photon_list given that the condition is True. 
+    
+        Parameters
+        ----------
+        photon: class.photon
+            A photon coming from photon class.
 
-    Parameters
-    ----------
-    photon: class.photon
-        A photon class
-
-    '''
+        '''
         if self.condition_dict:
             for cond, val in self.condition_dict.items():
                 for key, pval in photon.__dict__.items():
@@ -49,14 +51,43 @@ class photon_list():
 
 
     def add_photon(self, sphoton):
+        '''
+        Instanteates a new photon before calling append_photon. Append photon checks if photon object satifies conditions.
+
+        Parameters
+        ----------
+        sphoton: class.photon
+            A photon coming from photon class.
+        '''
         new_photon = photon([0, 0, 0], [0, 0, 1])
         new_photon.set_attr( sphoton.get_attr() )
         self.append_photon(new_photon)
 
-    def distance_point_to_plane(self, pos):
+    def distance_point_to_plane(self, pos: list):
+        '''
+        Calculates the distance from a given point to plane.
+
+        Parameters
+        ----------
+        pos: A 3 dimensional list of a given position
+
+        Returns
+        -------
+        float
+            A float provenient from a numpy.abs based on point position and plane equation
+        '''
         return numpy.abs(numpy.dot(self.normal, pos)-self.value)
 
     def add_symmetric_xphoton(self, sphoton):
+        '''
+        Instanteates a new X symmetric photon before callind append_photon. Append photon checks if photon object satifies conditions.
+
+        Parameters
+        ----------
+        sphoton: class.photon
+            A photon coming from photon class
+
+        '''
         new_photon = photon([0, 0, 0], [0, 0, 1])
         new_photon.set_attr( sphoton.get_attr() )
         new_photon.pos = -new_photon.pos[0], new_photon.pos[1], new_photon.pos[2]
@@ -64,76 +95,212 @@ class photon_list():
         self.append_photon(new_photon)
     
     def add_symmetric_yphoton(self, sphoton):
+        '''
+        Instanteates a new Y symmetric photon before callind append_photon. Append photon checks if photon object satifies conditions.
+
+        Parameters
+        ----------
+        sphoton: class.photon
+            A photon coming from photon class
+        '''
+
         new_photon = photon([0, 0, 0], [0, 0, 1])
         new_photon.set_attr( sphoton.get_attr() )
         new_photon.pos = new_photon.pos[0], -new_photon.pos[1], new_photon.pos[2]
         new_photon.normal = new_photon.normal[0], -new_photon.normal[1], new_photon.normal[2]
         self.append_photon(new_photon)
 
-    def avg_divergence(self, normal_ref):
-        normal_ref = normal_ref / numpy.linalg.norm(normal_ref)
-        vals = numpy.average([numpy.dot(photon.normal, normal_ref)**2 for photon in self.photons])
+    def avg_divergence(self, vec_ref: list()):
+        '''
+        Calculates the average photon divergence from given a vector reference.
+
+        Parameters
+        ----------
+        vec: A 3 dimensional list of given direction.
+
+        Returns
+        ------
+        float
+            A float provenient from a numpy.average based on vector direction and propagation direction for each photon
+
+        '''
+        vec_ref = vec_ref / numpy.linalg.norm(vec_ref)
+        vals = numpy.average([numpy.dot(photon.normal, vec_ref)**2 for photon in self.photons])
         return vals
 
     def get_positions(self):
+        '''
+        Get positions of all photons in the photon_list.
+
+        Returns
+        -------
+        numpy.asarray
+            A numpy array
+        '''
         vals = numpy.asarray([photon.pos for photon in self.photons])
         return vals
 
     def get_relative_centroid_positions(self):
+        '''
+        Get the relative position of all photons in the photon_list relative from centroid (calculted using avg_position)
+
+        Returns
+        -------
+        numpy.asarray
+        '''
         #Relative position to centroid for each photon
         vals = self.get_positions() - self.avg_position()
         return vals
 
     def get_relative_centroid_distances(self):
+        '''
+        Calculates the distances from a given point to plane.
+
+        Returns
+        -------
+        numpy.asarray
+        '''
         #Relative distance to centroid for each photon
         vals = numpy.sqrt(numpy.sum(numpy.power(self.get_relative_centroid_positions(), 2), axis=1))
         return vals
 
     def get_intensities(self):
+        '''
+        Gets the intensity of all photons in the photon_list
+
+        Returns
+        -------
+        numpy.asarray
+            A photons-dimensional numpy array
+        '''
         vals = numpy.asarray([photon.intensity for photon in self.photons])
         return vals
 
     def avg_position(self):
+        '''
+        Calculates the average position of all photons in the photon_list.
+
+        Returns
+        ----------
+        numpy.asarray
+            A 3 dimensional numpy array
+
+        '''
         vals = numpy.asarray([numpy.average([photon.pos[axis] for photon in self.photons]) for axis in range(3)])
         return vals
     
     def max_position(self):
-        vals = [numpy.amax([photon.pos[axis] for photon in self.photons]) for axis in range(3)]
+        '''
+        Calculates the max position in each axis for all photons in photon_list.
+
+        Returns
+        -------
+        numpy.asarray
+            A 3 dimensional numpy array
+        '''
+        vals = numpy.asarray([numpy.amax([photon.pos[axis] for photon in self.photons]) for axis in range(3)])
         return vals
     
     def min_position(self):
-        vals = [numpy.amin([photon.pos[axis] for photon in self.photons]) for axis in range(3)]
+        '''
+        Calculates the min position in each axis for all photons in photon_list.
+
+        Parameters
+        ----------
+        pos: A 3 dimensional list of a given position
+
+        Returns
+        -------
+        numpy.asarray
+            A 3 dimensional numpy array
+        '''
+        vals = numpy.asarray([numpy.amin([photon.pos[axis] for photon in self.photons]) for axis in range(3)])
         return vals
     
     def std_position(self):
-        vals = [numpy.std([photon.pos[axis] for photon in self.photons]) for axis in range(3)]
+        '''
+        Calculates the standard deviation of the position for all photons in photon_list.
+
+        Returns
+        -------
+        numpy.asarray
+            A 3 dimensional numpy array
+        '''
+        vals = numpy.asarray([numpy.std([photon.pos[axis] for photon in self.photons]) for axis in range(3)])
         return vals
 
     def get_weighted_inverse(self):
+        '''
+        Calculates the division of intensity and photon relative distance from centroid fro all photons in photon_list
+
+        Returns
+        -------
+        numpy array
+            A n dimensional numpy array
+        '''
         vals = numpy.divide(self.get_intensities(), self.get_relative_centroid_distances())
         return vals
 
     def get_average_weighted_inverse(self):
-        vals = numpy.average(self.get_weighted_inverse())
+        '''
+        Calculates the average of get_weighted_inverse.
+        
+        Returns
+        -------
+        float
+        '''
+        vals = float(numpy.average(self.get_weighted_inverse()))
         return vals
 
     def avg_distance_axis_z(self, c=[0, 0]):
+        '''
+        Calculates the distance for all photons in photon_list relative to a (x, y) coordinate in  a Z normal plane.
+
+        Parameters
+        ----------
+        c: The position in x, y plane
+
+        Returns
+        -------
+        float
+        '''
         xc, yc = c[0], c[1]
-        vals = numpy.average([numpy.sqrt((photon.pos[0]-xc)**2+(photon.pos[1]-yc)**2) for photon in self.photons])
+        vals = float(numpy.average([numpy.sqrt((photon.pos[0]-xc)**2+(photon.pos[1]-yc)**2) for photon in self.photons]))
         return vals
     
     def avg_distance_axis_y(self, c=[0, 0]):
-        #Average relative distance to given point in a given axis for each photon
+        '''
+        Calculates the distance for all photons in photon_list relative to a (x, z) coordinate in a Y nornal plane.
+
+        Parameters
+        ----------
+        c: The position in x, z plane
+
+        Returns
+        -------
+        float
+        '''
         xc, zc = c[0], c[1]
-        vals = numpy.average([numpy.sqrt((photon.pos[0]-xc)**2+(photon.pos[2]-zc)**2) for photon in self.photons])
+        vals = float(numpy.average([numpy.sqrt((photon.pos[0]-xc)**2+(photon.pos[2]-zc)**2) for photon in self.photons]))
         return vals
     
-    def get_weighted_inverse_axis_y(self, c=[0, 0]):
+    def get_average_weighted_inverse_axis_y(self, c=[0, 0]):
+        '''
+        Calculates the average of get_weighted_inverse relative to a (x, z) coordinate in Y normal plane.
+
+        Parameters
+        ----------
+        c: The position in x, z plane
+
+        Returns
+        ------
+        float
+        '''
         assert (self.normal == [0, 1, 0]).all()
         pos = self.get_positions() - numpy.asarray([c[0], self.value, c[1]])
         dist = numpy.sqrt(numpy.sum(numpy.power(pos, 2), axis=1))
         wi = numpy.divide(self.get_intensities(), dist)
-        avg_wi = numpy.average(wi)
+        avg_wi = float(numpy.average(wi)_
         return avg_wi
 
 
