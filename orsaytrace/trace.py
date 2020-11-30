@@ -300,7 +300,7 @@ class photon_list():
         pos = self.get_positions() - numpy.asarray([c[0], self.value, c[1]])
         dist = numpy.sqrt(numpy.sum(numpy.power(pos, 2), axis=1))
         wi = numpy.divide(self.get_intensities(), dist)
-        avg_wi = float(numpy.average(wi)
+        avg_wi = float(numpy.average(wi))
         return avg_wi
 
 
