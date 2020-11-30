@@ -137,6 +137,19 @@ class photon():
 
 
     def reflection(self):
+        '''
+        Reflection photon object using last_surface attribute.
+
+        Parameters
+        ----------
+        None
+        
+
+        Returns
+        -------
+        boolean
+            True if reflection is sucessfull and false if you attempted a reflection in a grid which there was no surface normal vector.
+        '''
         inc = self.normal
         inc = inc / numpy.linalg.norm(inc)
         sur_normal = self.last_surface
@@ -160,6 +173,21 @@ class photon():
         return True
     
     def refraction(self, n2):
+        '''
+        Reflection photon object using last_surface attribute and a given index of refraction.
+
+        Parameters
+        ----------
+        n2: float
+            The index of refraction.
+        
+
+        Returns
+        -------
+        boolean
+            True if refraction is sucessfull and false if you attempted a refraction in a grid which there was no surface normal vector
+        '''
+        
         r = self.n/n2
         inc = self.normal
         inc = inc / numpy.linalg.norm(inc)
@@ -201,6 +229,20 @@ class photon():
         return True
 
     def move(self, value):
+        '''
+        Increment photon position
+
+        Parameters
+        ----------
+        move: float
+            Increment photon position of value
+        
+
+        Returns
+        -------
+        boolean
+            True if is sucessfull.
+        '''
         self.pos = self.pos + self.normal*value
         return True
 

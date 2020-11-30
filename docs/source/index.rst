@@ -6,12 +6,21 @@
 Welcome to orsaytrace's documentation!
 ======================================
 
+Installation
+____________
+
+Quick install using pip::
+
+    pip install orsaytrace
+
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
    
-   readme 
-   modules
+   readme
+   examples
+   code
 
 Indices and tables
 ==================

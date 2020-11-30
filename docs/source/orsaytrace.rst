@@ -11,11 +11,3 @@ orsaytrace.trace module
    :members:
    :undoc-members:
    :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: orsaytrace
-   :members:
-   :undoc-members:
-   :show-inheritance:
