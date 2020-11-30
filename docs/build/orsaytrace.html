@@ -1,0 +1,411 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>orsaytrace package &#8212; orsaytrace v1.0.13 documentation</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="orsaytrace" href="modules.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="orsaytrace-package">
+<h1>orsaytrace package<a class="headerlink" href="#orsaytrace-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-orsaytrace.trace">
+<span id="orsaytrace-trace-module"></span><h2>orsaytrace.trace module<a class="headerlink" href="#module-orsaytrace.trace" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="orsaytrace.trace.Simu">
+<em class="property">class </em><code class="sig-prename descclassname">orsaytrace.trace.</code><code class="sig-name descname">Simu</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">z</span></em>, <em class="sig-param"><span class="n">res</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.assign_block_n">
+<code class="sig-name descname">assign_block_n</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">min_index</span></em>, <em class="sig-param"><span class="n">max_index</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.assign_block_n" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.assign_block_normal">
+<code class="sig-name descname">assign_block_normal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">min_index</span></em>, <em class="sig-param"><span class="n">max_index</span></em>, <em class="sig-param"><span class="n">normal</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.assign_block_normal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.assign_n">
+<code class="sig-name descname">assign_n</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.assign_n" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.assign_normal">
+<code class="sig-name descname">assign_normal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="n">normal</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.assign_normal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.check_analysis_plan">
+<code class="sig-name descname">check_analysis_plan</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">photon</span></em>, <em class="sig-param"><span class="n">rindex</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.check_analysis_plan" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.create_analysis_plan">
+<code class="sig-name descname">create_analysis_plan</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">normal</span></em>, <em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.create_analysis_plan" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.create_cylinder_element">
+<code class="sig-name descname">create_cylinder_element</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">center</span></em>, <em class="sig-param"><span class="n">radius</span></em>, <em class="sig-param"><span class="n">length</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">normal</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.create_cylinder_element" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.create_parabolic_section_element">
+<code class="sig-name descname">create_parabolic_section_element</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">c</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">th</span></em>, <em class="sig-param"><span class="n">wid</span></em>, <em class="sig-param"><span class="n">pp</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.create_parabolic_section_element" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.create_rectangle_element">
+<code class="sig-name descname">create_rectangle_element</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">normal</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.create_rectangle_element" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.create_sphere_element">
+<code class="sig-name descname">create_sphere_element</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">c</span></em>, <em class="sig-param"><span class="n">r</span></em>, <em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.create_sphere_element" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.create_thin_lens">
+<code class="sig-name descname">create_thin_lens</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cplane</span></em>, <em class="sig-param"><span class="n">focus</span></em>, <em class="sig-param"><span class="n">aperture</span></em>, <em class="sig-param"><span class="n">index_refr</span></em>, <em class="sig-param"><span class="n">lens_type</span><span class="o">=</span><span class="default_value">'plane-convex'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.create_thin_lens" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.d2_source">
+<code class="sig-name descname">d2_source</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">r</span></em>, <em class="sig-param"><span class="n">c</span><span class="o">=</span><span class="default_value">[0, 0, 0]</span></em>, <em class="sig-param"><span class="n">normal</span><span class="o">=</span><span class="default_value">[0, 0, 1]</span></em>, <em class="sig-param"><span class="n">na</span><span class="o">=</span><span class="default_value">0.12</span></em>, <em class="sig-param"><span class="n">angles</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.d2_source" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.distance">
+<code class="sig-name descname">distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vec1</span></em>, <em class="sig-param"><span class="n">vec2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.distance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.grid_to_pos">
+<code class="sig-name descname">grid_to_pos</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">grid</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.grid_to_pos" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.index_from_pos">
+<code class="sig-name descname">index_from_pos</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.index_from_pos" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.is_photon_in_cell">
+<code class="sig-name descname">is_photon_in_cell</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">photon</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.is_photon_in_cell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.merge_photon_lists">
+<code class="sig-name descname">merge_photon_lists</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">my_photon_lists</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.merge_photon_lists" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.normal_and_index_from_pos">
+<code class="sig-name descname">normal_and_index_from_pos</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.normal_and_index_from_pos" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.normal_from_pos">
+<code class="sig-name descname">normal_from_pos</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.normal_from_pos" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.point_source">
+<code class="sig-name descname">point_source</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">r</span></em>, <em class="sig-param"><span class="n">c</span></em>, <em class="sig-param"><span class="n">normal</span><span class="o">=</span><span class="default_value">[0, 0, 1]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.point_source" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.pos_to_grid">
+<code class="sig-name descname">pos_to_grid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.pos_to_grid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.pos_to_grid_1D">
+<code class="sig-name descname">pos_to_grid_1D</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.pos_to_grid_1D" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.reset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.rotate">
+<code class="sig-name descname">rotate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ang</span></em>, <em class="sig-param"><span class="n">axis</span></em>, <em class="sig-param"><span class="n">origin</span></em>, <em class="sig-param"><span class="n">ROI</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.rotate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">run_index</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">split</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">xsym</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ysym</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.run_photon">
+<code class="sig-name descname">run_photon</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">photon_list</span></em>, <em class="sig-param"><span class="n">rindex</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.run_photon" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.show_created_elements">
+<code class="sig-name descname">show_created_elements</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.show_created_elements" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.show_elements">
+<code class="sig-name descname">show_elements</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">my_photon_lists</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'all-noplan'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.show_elements" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.Simu.show_photons2D">
+<code class="sig-name descname">show_photons2D</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">my_photon_lists</span></em>, <em class="sig-param"><span class="n">plan</span><span class="o">=</span><span class="default_value">'xy'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.Simu.show_photons2D" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="orsaytrace.trace.photon">
+<em class="property">class </em><code class="sig-prename descclassname">orsaytrace.trace.</code><code class="sig-name descname">photon</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em>, <em class="sig-param"><span class="n">normal</span></em>, <em class="sig-param"><span class="n">intensity</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt id="orsaytrace.trace.photon.get_attr">
+<code class="sig-name descname">get_attr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon.get_attr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon.move">
+<code class="sig-name descname">move</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon.move" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon.reflection">
+<code class="sig-name descname">reflection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon.reflection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon.refraction">
+<code class="sig-name descname">refraction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon.refraction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon.set_attr">
+<code class="sig-name descname">set_attr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">values</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon.set_attr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon.update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="orsaytrace.trace.photon_list">
+<em class="property">class </em><code class="sig-prename descclassname">orsaytrace.trace.</code><code class="sig-name descname">photon_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">normal</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.add_photon">
+<code class="sig-name descname">add_photon</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sphoton</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.add_photon" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.add_symmetric_xphoton">
+<code class="sig-name descname">add_symmetric_xphoton</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sphoton</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.add_symmetric_xphoton" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.add_symmetric_yphoton">
+<code class="sig-name descname">add_symmetric_yphoton</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sphoton</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.add_symmetric_yphoton" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.append_photon">
+<code class="sig-name descname">append_photon</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">photon</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.append_photon" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.avg_distance_axis_y">
+<code class="sig-name descname">avg_distance_axis_y</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">c</span><span class="o">=</span><span class="default_value">[0, 0]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.avg_distance_axis_y" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.avg_distance_axis_z">
+<code class="sig-name descname">avg_distance_axis_z</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">c</span><span class="o">=</span><span class="default_value">[0, 0]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.avg_distance_axis_z" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.avg_divergence">
+<code class="sig-name descname">avg_divergence</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">normal_ref</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.avg_divergence" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.avg_position">
+<code class="sig-name descname">avg_position</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.avg_position" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.distance_point_to_plane">
+<code class="sig-name descname">distance_point_to_plane</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.distance_point_to_plane" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.get_average_weighted_inverse">
+<code class="sig-name descname">get_average_weighted_inverse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.get_average_weighted_inverse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.get_intensities">
+<code class="sig-name descname">get_intensities</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.get_intensities" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.get_positions">
+<code class="sig-name descname">get_positions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.get_positions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.get_relative_centroid_distances">
+<code class="sig-name descname">get_relative_centroid_distances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.get_relative_centroid_distances" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.get_relative_centroid_positions">
+<code class="sig-name descname">get_relative_centroid_positions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.get_relative_centroid_positions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.get_weighted_inverse">
+<code class="sig-name descname">get_weighted_inverse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.get_weighted_inverse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.get_weighted_inverse_axis_y">
+<code class="sig-name descname">get_weighted_inverse_axis_y</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">c</span><span class="o">=</span><span class="default_value">[0, 0]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.get_weighted_inverse_axis_y" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.max_position">
+<code class="sig-name descname">max_position</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.max_position" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.min_position">
+<code class="sig-name descname">min_position</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.min_position" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="orsaytrace.trace.photon_list.std_position">
+<code class="sig-name descname">std_position</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#orsaytrace.trace.photon_list.std_position" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-orsaytrace">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-orsaytrace" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">orsaytrace</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">OrsayTrace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#contributing">Contributing</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">orsaytrace</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">orsaytrace package</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">orsaytrace</a><ul>
+      <li>Previous: <a href="modules.html" title="previous chapter">orsaytrace</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Yves Auad.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/orsaytrace.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
