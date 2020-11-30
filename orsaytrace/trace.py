@@ -1225,6 +1225,22 @@ class Simu:
         self.assign_block_normal(min_index, max_index, normal)
 
     def create_cylinder_element(self, center, radius, length, n, normal):
+        '''
+        Creates a cilindrical element.
+
+        Parameters
+        ----------
+        center: array_like
+            A 3 dimensional of center position.
+        radius: float
+            Cilinder radius.
+        length: float
+            Cilinder length.
+        n: float
+            Index of refraction.
+        normal: array_like
+            A 3 dimensional array of cilinder axis.
+        '''
         
         xc, yc, zc = center
         
@@ -1255,9 +1271,31 @@ class Simu:
 
 
     def create_thin_lens(self, cplane, focus, aperture, index_refr, lens_type='plane-convex'):
+        '''
+        Creates a thin lens based on other geometrical elements. Allow one to create either a plane-convex or a convex-plane lens.
+
+        Parameters
+        ----------
+        cplane: array_like
+            A 3 dimensional array representing the center of the lens. This point is always in the plane side of the lens.
+        focus: float
+            Lens focus.
+        aperture: float
+            Lens aperture. 
+        index_refr: float
+            Lens index of refraction.
+        lens_type: str
+            Must be either plane-convex or convex-plane
+
+        Raises
+        ------
+        AssertionError
+            If aperture is bigger than focus or if type is not 'plane-convex' or 'convex-plane', raises an exception error.
+        '''
         xc, yc, zp = cplane
         r = focus/2.0
         assert focus/2.>=aperture/2.
+        assert lens_type=='plane_convex' or lens_type=='convex-plane'
         if lens_type=='plane-convex': zc = zp - numpy.sqrt((focus/2.0)**2 - (aperture/2.)**2) #plane_convex
         if lens_type=='convex-plane': zc = zp + numpy.sqrt((focus/2.0)**2 - (aperture/2.)**2) #convex-plane
 
@@ -1272,27 +1310,118 @@ class Simu:
         self.create_cylinder_element([xc, yc, zp], aperture/2., 0.0, index_refr, [0, 0, 1])
 
     def distance(self, vec1, vec2):
+        '''
+        Distance between two points.
+
+        Parameters
+        ----------
+        vec1: array_like
+            A 3 dimensional array representing first position.
+        vec2: array_like
+            A 3 dimensional array representing second position.
+
+
+        '''
         return numpy.sum(numpy.power(numpy.subtract(vec1, vec2), 2))**0.5
 
     def is_photon_in_cell(self, photon):
+        '''
+        Check if photon is in the cell.
+
+        Parameters
+        ----------
+        photon: class.photon
+
+        Returns
+        -------
+        bool
+        '''
         pos = photon.pos
-        if -self.size[0]/2.<pos[0]<self.size[0]/2. and -self.size[1]/2.<pos[1]<self.size[1]/2. and -self.size[2]/2.<pos[2]<self.size[2]/2.:
-           return True
+        val = all([abs(pos[i])<self.size[i]/2. for i in range(3)])
+        if val:
+            return True
         else:
             return False
 
     def check_analysis_plan(self, photon, rindex):
+        '''
+        Check if photon is in a created analysis plan.
+
+        Parameters
+        ----------
+        photon: class.photon
+        rindex: int
+            Run index. Used for multi process simulations.
+        '''
         pos = photon.pos
         for index, planes in enumerate(self.split_photon_lists[rindex]):
             if planes.distance_point_to_plane(pos)<=self.res/2.0:
                 planes.add_photon(photon)
 
     def create_analysis_plan(self, normal, value, **kargs):
+        '''
+        Create an analysis plan.
+
+        Parameters
+        ----------
+        normal: array_like
+            A 3 dimensional array of plan normal vector.
+        value: float
+            Indenpendent value of a plan equation.
+        **kargs: dict
+            A dictionary that will be used as a condition dictionary. Photons will be added the plan only if satisfies this condition.
+
+        Notes
+        -----
+        Condition must be an attribute of photon. It can take two forms: a single number or a tuple. Single number represents minimal values, while tuple represents a possible interval
+
+        Examples
+        --------
+        >>> create_analysis_plan([0, 1, 0], a, reflection_count = 1)
+
+        Example above creates a analyses plan with equation 
+        
+        .. math:: y=a
+
+        and with a condition that reflection_count is higher than 1 (at least one reflection).
+        
+        >>> create_analysis_plan([1, 2, 3], 3, reflection_count = (1, 1))
+        
+        Example above creates a analyses plan with equation 
+        
+        .. math:: (x + y + z) / \sqrt{14} = 3
+
+        and with a condition that reflection_count is exactly 1. Factor square root of 14 comes from vector normalization
+        
+        >>> create_analysis_plan([1, 0, 0], 0.4, refraction_count = (2, 30))
+        
+        Example above creates a analyses plan with equation 
+        
+        .. math:: x=0.4
+
+        and with a condition that refraction_count is higher than 2 but smaller than 30.
+        '''
         plist = photon_list(normal, value)
         plist.condition_dict = kargs
         self.photon_lists = numpy.append(self.photon_lists, plist)
     
     def run_photon(self, photon_list, rindex):
+        '''
+        Simulatiom run for the initial set (or subset) of photons. It terminates when all photons leave the cell.
+
+        Parameters
+        ----------
+        photon_list: array_like
+            The complete set (or subset) of the intial photons.
+        rindex: int
+            Run index. Used for multi process simulation. 
+
+        See Also
+        --------
+        run: 
+            Starts the simulation for each set or subset of photon. Can be used with multi processing.
+
+        '''
         for photon in tqdm(photon_list[rindex], desc=f'Running'):
             while True:
                 if photon.update(self.normal_and_index_from_pos(photon.pos)): photon.move(self.res)
@@ -1304,6 +1433,30 @@ class Simu:
 
 
     def run(self, run_index=0, split=1, xsym=False, ysym=False):
+        '''
+        Simulation run main function.
+
+        Parameters
+        ----------
+        run_index: int
+            Run index. Used for multi process simulation
+        split: int
+            Split initial photons in equal parts of 'split'. Used for multi process simulation
+        xsym: bool
+            If simulation is symmetric with respect to x axis, you can reduce number of running photons by two.
+        ysym: bool
+            If simulation is symmetric with respect to y axis, you can reduce number of running photons by two.
+
+        Returns
+        -------
+        array_like
+            Returns an array of class.photon_list. Lenght is given by the name of planes created. Each element in the list has class.photon objects. Length for each element is the number of photons saved for the correspondent plane.
+
+        Raises
+        ------
+        AssertionError
+            Raises an assertionError if run_index is smaller than split. You cannot run subset 1 if you have not splitted your initial photon array. Maximum run_index is always split-1.
+        '''
         assert run_index<split
         n = split
 
@@ -1332,11 +1485,28 @@ class Simu:
         return self.split_photon_lists[run_index]
 
     def merge_photon_lists(self, my_photon_lists):
+        '''
+        Merge photon lists in a single array. This function is used for multi processing simulations.
+
+        Parameters
+        ----------
+        my_photon_lists: array_like
+            An array containing objects class.photon_list
+
+        Returns
+        -------
+        array_like
+            Return an array like containing photon_lists. 
+        '''
         for index, photon_list in enumerate(my_photon_lists):
             for photon in photon_list.photons:
                 self.photon_lists[index].append_photon(photon)
         return self.photon_lists
 
     def reset(self):
+        '''
+        Reset initial photon lists in order to run simulation a second time.
+
+        '''
         pass
 
