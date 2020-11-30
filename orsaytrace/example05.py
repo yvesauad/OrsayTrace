@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
         a.point_source(r, [0, 0, -z/2], [0, 0, 1])
 
-        #a.create_parabolic_section_element([0.0, yvertex, 0.0], -1.0, 2*thickness, 3.0, p) 
+        #a.create_parabolic_surface_element([0.0, yvertex, 0.0], -1.0, 2*thickness, 3.0, p) 
         #a.create_rectangle_element([-x/2, x/2, yvertex-focus, y/2, -z/2, z/2], 1.0, [0, 0, 0]) 
         #a.rotate(numpy.pi/32, [0, 1, 0], [0, yvertex, 0.0], [-1.5, 1.5, -1.5, 1.5, -1.5, 1.5])
 

@@ -305,6 +305,34 @@ class photon_list():
 
 
 class photon():
+
+    '''
+    A photon is the basic structure of this simulation. It contains the attributes pos, normal, intensity, n, last_surface, refraction_count and reflection_count
+
+    Parameters
+    ----------
+    pos: list
+        A 3 dimensional list stating each photon position
+    normal: list
+        A 3 dimensional list stating each photon normal (or wavevector)
+    intensity: float
+        A float for the initial photon intensity
+
+    Notes
+    -----
+
+    Other attributes of photon available to user and used during simulation run:
+
+    n: float
+        Index of refraction
+    last_surface: array_like
+        As photons crosses the grid, it overwrites the last valid surface normal
+    refraction_count: int
+        Number os refractions photon has done
+    reflection_count: int
+        Number os reflections photon has done
+    '''
+
     def __init__(self, pos, normal, intensity=1.):
         self.pos = pos
         self.normal = normal / numpy.linalg.norm(normal)
@@ -315,20 +343,32 @@ class photon():
         self.reflection_count = 0
 
     def set_attr(self, values):
+        '''
+        This sets all photon attributes. Can be used to clone photons.
+
+        Parameters
+        ----------
+        values: array_like
+            An array_like object as following: **[pos, normal, intensity, n, last_surface, refraction_count, reflection_count]**
+        '''
+
         self.pos, self.normal, self.intensity, self.n, self.last_surface, self.refraction_count, self.reflection_count = values
     
     def get_attr(self):
+        '''
+        This gets all photon attributes. Can be used to clone photons.
+
+        Returns
+        -------
+        array_like
+            An array_like object as following: **[pos, normal, intensity, n, last_surface, refraction_count, reflection_count]**
+        '''
         return self.pos, self.normal, self.intensity, self.n, self.last_surface, self.refraction_count, self.reflection_count
 
 
     def reflection(self):
         '''
         Reflection photon object using last_surface attribute.
-
-        Parameters
-        ----------
-        None
-        
 
         Returns
         -------
@@ -339,7 +379,8 @@ class photon():
         inc = inc / numpy.linalg.norm(inc)
         sur_normal = self.last_surface
         
-        if sur_normal==[0, 0, 0]:
+        if all([sur_normal[i]==0 for i in range(3)]):
+        #if all([sur_normal[i]!=0 for i in range(3)]):
             print('***WARNING***: No surface normal.')
             return False
         
@@ -359,7 +400,7 @@ class photon():
     
     def refraction(self, n2):
         '''
-        Reflection photon object using last_surface attribute and a given index of refraction.
+        Refraction photon object using last_surface attribute and a given index of refraction.
 
         Parameters
         ----------
@@ -379,7 +420,7 @@ class photon():
         
         sur_normal = self.last_surface
         
-        if sur_normal==[0, 0, 0]:
+        if all([sur_normal[i]==0 for i in range(3)]):
             print('***WARNING***: No surface normal.')
             return False
 
@@ -415,12 +456,12 @@ class photon():
 
     def move(self, value: float):
         '''
-        Increment photon position
+        Increment photon position.
 
         Parameters
         ----------
         value: float
-            Increment photon position of value
+            Increment photon position by value and given by normal (photon direction)
         
 
         Returns
@@ -432,9 +473,30 @@ class photon():
         return True
 
     def update(self, value):
-        sur_normal, index = value
+        '''
+        Update is a core function that updates photon last_surface and photon normal by means of refractions of reflections.
+
+        Parameters
+        ----------
+        value: array_like
+            A 2 dimensional array where first index is the surface normal and the second is the index of refraction.
+
+        Returns
+        -------
+        boolean
+            True if photon suffered a refraction or reflection. False if nothing happens with photon normal.
+
         
-        if sur_normal != [0, 0, 0]:
+        Notes
+        --------
+        If return is True, photon moves a single step without refraction/reflection using move. This avoids non intentional double reflections/refractions
+
+        '''
+
+        sur_normal, index = value
+
+        #if sur_normal != [0, 0, 0]:
+        if not all([sur_normal[i]==0 for i in range(3)]):
             self.last_surface = sur_normal
         
         if index!=self.n and index>0:
@@ -448,6 +510,39 @@ class photon():
 
 
 class Simu:
+    '''
+    A simulation class that will allow one to create sereral objects and perform spacial transformations, such as rotations. This class also contains a few convenient functions in order to display data easily to the user. 
+
+    Parameters
+    ----------
+    x: float
+        A float representing cell size in x
+    y: float
+        A float representing cell size in y
+    z: float
+        A float representing cell size in z
+    res: float
+        A float for simulation resolution.
+
+    Notes
+    -----
+
+    Other attributes of simulation available to user and used during simulation run:
+
+    ss: int
+        A subsampling factor. Default is 2.01 and it says meshing will be done using sub pixels resolution.
+    grid: array_like
+        A 3 dimensional array for the number of grid points.
+    index: numpy array
+        A numpy array initialized as **numpy.ones(grid)**. This means initial cell is under vacuum for all wavelengths.
+    normal: numpy array
+        A numpy array initialized as **numpy.asarray([numpy.zeros(grid), numpy.zeros(grid), numpy.zeros(grid)])** to all surface normals. Initial cell has no valid surface normals because there is no surfaces.
+    photons: list
+        A list containing photon objects. Those photons will propagate and be saved along the simulation.
+    photon_lists: numpy array
+        A numpy array cointaining photon_lists objects. photons will be saved here. Array length is given by the number of analyzes plans.
+    '''
+
     def __init__(self, x, y, z, res):
         self.size = [x, y, z]
         self.res = res
@@ -462,60 +557,221 @@ class Simu:
         self.x, self.y = numpy.meshgrid(self.x, self.y)
 
     def assign_normal(self, index, normal):
+        '''
+        Assigns a surface normal in a given index
+
+        Parameters
+        ----------
+        index: array_like
+            A three dimensional array with grid position (in pixels).
+        normal: array_like
+            A three dimensional array with the correspondent surface normal.
+        '''
+
         if (normal!=numpy.zeros(3)).all(): 
             normal = normal / numpy.linalg.norm(normal)
         for i in range(3):
             self.normal[i][index[0], index[1], index[2]] = normal[i]
     
     def assign_block_normal(self, min_index, max_index, normal):
+
+        '''
+        Assigns normal for multiple points at once.
+
+        Parameters
+        ----------
+        min_index: array_like
+            A three dimensional array with grid position (in pixels) for the botton left point.
+        max_index: array_like
+            A three dimensional array with grid position (in pixels) for the top right point.
+        normal: array_like
+            A three dimensiona array with the correspondent surface normal.
+        '''
         if (normal!=numpy.zeros(3)).all():
             normal = normal / numpy.linalg.norm(normal)
         for i in range(3):
             self.normal[i][min_index[0]:max_index[0], min_index[1]:max_index[1], min_index[2]:max_index[2]] = normal[i]
 
     def assign_n(self, index, value):
+        '''
+        Assigns index of refraction for a given point
+
+        Parameters
+        ----------
+        index: array_like
+            A three dimensional array with grid position (in pixels).
+        value: float
+            The desired index of refraction
+        '''
         self.index[index[0], index[1], index[2]] = value
     
     def assign_block_n(self, min_index, max_index, value):
+        '''
+        Assigns index of refraction for multiple points at once
+
+        Parameters
+        ----------
+        min_index: array_like
+            A three dimensional array with grid position (in pixels) for the botton left point.
+        max_index: array_like
+            A three dimensional array with grid position (in pixels) for the top right point.
+        normal: array_like
+            A three dimensiona array with the correspondent surface normal.
+        '''
         self.index[min_index[0]:max_index[0], min_index[1]:max_index[1], min_index[2]:max_index[2]] = value
 
     def pos_to_grid_1D(self, value, index):
+        '''
+        Gets grid index from position for a single dimensional axis
+
+        Parameters
+        ----------
+        value: float
+            Desired position
+        index:
+            Desired axis (0 for 'x', 1 for 'y' and 2 for 'z')
+
+        Returns
+        -------
+        int
+            Grid position.
+
+        Raises
+        ------
+        Exception
+            If value is outside cell boundaries.
+        '''
+
+        assert abs(value)<=self.size[index]/2.0
+
         return round((value/(self.size[index]/2.)+1)/2*self.grid[index])
         
 
     def pos_to_grid(self, pos):
-        #this returns relative current photon position from [0:self.grid]
+        '''
+        Get grid index from position in the 3D space.
+
+        Parameters
+        ----------
+        pos: float
+            Desired position
+
+        Returns
+        -------
+        array_like
+            Grid position
+
+        Raises
+        -----
+        Exception
+            If value is outside cell boundaries
+        '''
+        assert all([abs(pos[i])<=self.size[i]/2.0 for i in range(3)])
         indexes = [round((pos[i]/(self.size[i]/2.)+1)/2*self.grid[i]) for i in range(3)]
+        if any([indexes[i]>=self.grid[i] for i in range(3)]):
+            indexes = [int((pos[i]/(self.size[i]/2.)+1)/2*self.grid[i]) for i in range(3)]
         return indexes
 
     def grid_to_pos(self, grid):
+        '''
+        Get position from grid index.
+
+        Parameters
+        ----------
+        grid: array_like
+            Grid Position.
+
+        Returns
+        -------
+        array_like
+            Position.
+        
+        Raises
+        ------
+        Exeception
+            If grid is outside cell boundaries.
+        '''
         pos = [ (2.0*grid[i]/self.grid[i]-1) * self.size[i]/2.0 for i in range(3)]
         return pos
 
     def index_from_pos(self, pos):
+        '''
+        Get index of refraction from position.
+
+        Parameters
+        ----------
+        pos: array_like
+            Desired Position.
+
+        Returns
+        -------
+        float
+            The correspondent index of refraction.
+
+        Raises
+        ------
+        Exception
+            If value is outside cell boundaries
+        '''
         #this returns current index of refraction of a given photon in a given position
 
-        indexes = [round((pos[i]/(self.size[i]/2.)+1)/2*self.grid[i]) for i in range(3)]
+        assert all([abs(pos[i])<=self.size[i]/2.0 for i in range(3)])
+        indexes = self.pos_to_grid(pos)
         return self.index[indexes[0], indexes[1], indexes[2]]
 
     def normal_from_pos(self, pos):
+        '''
+        Get normal direction from position.
+
+        Parameters
+        ----------
+        pos: array_like
+            Desired Position.
+
+        Returns
+        -------
+        array_like:
+            The correspondent normal direction.
+        '''
         #this returns surface normal (if exists) of a given photon in a given position
 
-        indexes = [int((pos[i]/(self.size[i]/2.)+1)/2*self.grid[i]) for i in range(3)]
-        return [self.normal[0][indexes[0], indexes[1], indexes[2]],
+        indexes = self.pos_to_grid(pos)
+        return numpy.asarray([self.normal[0][indexes[0], indexes[1], indexes[2]],
             self.normal[1][indexes[0], indexes[1], indexes[2]], 
-            self.normal[2][indexes[0], indexes[1], indexes[2]]]
+            self.normal[2][indexes[0], indexes[1], indexes[2]]])
     
     def normal_and_index_from_pos(self, pos):
-        #this returns surface normal (if exists) and the refractive index of a given photon in a given position
+        '''
+        Get both normal surface and index of refraction from pos
 
-        indexes = [int((pos[i]/(self.size[i]/2.)+1)/2*self.grid[i]) for i in range(3)]
+        Parameters
+        ----------
+        pos: array_like
+            Desired position.
+
+        Returns
+        -------
+        tuple
+            A tuple in which first element is the normal and the second is the refractive index.
+        '''
+        #this returns surface normal (if exists) and the refractive index of a given photon in a given position
+        
+        assert all([abs(pos[i])<=self.size[i]/2.0 for i in range(3)])
+
+        indexes = self.pos_to_grid(pos)
+
         return ([self.normal[0][indexes[0], indexes[1], indexes[2]],
             self.normal[1][indexes[0], indexes[1], indexes[2]], 
             self.normal[2][indexes[0], indexes[1], indexes[2]]], self.index[indexes[0], indexes[1], indexes[2]])
 
 
     def show_photons2D(self, my_photon_lists, plan='xy'):
+        '''
+        See Also
+        --------
+
+        Deprecated function. Please access photon_list properties manually.
+        '''
         if 'xz' not in plan and 'xz' not in plan and 'xy' not in plan:
             raise Exception('Please pick either xy, xz or yz as plan.')
         
@@ -547,6 +803,14 @@ class Simu:
         plt.show()
 
     def show_created_elements(self, mode):
+        '''
+        Function shows in 3D elements created. Those are the initial conditions of the problem
+
+        Parameters
+        ----------
+        mode: str
+            Defines what is displayed. 'all' displays all, **'all-noplan'** or **'-noplan'** excludes analyzes plans and anything else display only photons.
+        '''
         
         fig = plt.figure()
         ax = plt.axes(projection='3d')
@@ -568,6 +832,7 @@ class Simu:
             ax.scatter(phx, phz, phy, c='green', label='Photons')
             ax.quiver(phx, phz, phy, nphx, nphz, nphy, length=0.5)
 
+        
         unpack_photons(self.photons)
 
         if 'all' in mode:
@@ -590,6 +855,16 @@ class Simu:
         plt.show()
 
     def show_elements(self, my_photon_lists, mode='all-noplan'):
+        '''
+        Shows in 3D elements at the end of simulation.
+
+        Parameters
+        ----------
+        my_photon_lists: array_like
+            Array_like containing **class.photon_list** objects.
+        mode: str
+            Defines what is displayed. 'all' displays all, **'all-noplan'** or **'-noplan'** excludes analyzes plans and anything else display only photons.
+        '''
 
         fig = plt.figure()
         ax = plt.axes(projection='3d')
@@ -647,6 +922,9 @@ class Simu:
         plt.show()
 
     def point_source(self, r, c, normal=[0, 0, 1]):
+        '''
+        #TODO
+        '''
         xc, yc, zc = c
         x = numpy.arange(xc-r, xc+self.res, self.res)
         y = numpy.arange(yc-r, yc+self.res, self.res)
@@ -664,6 +942,37 @@ class Simu:
 
 
     def d2_source(self, r, c=[0, 0, 0], normal=[0, 0, 1], na = 0.12, angles=1):
+        '''
+        Creates a 2d source along axis z with a numerical aperture
+
+        Parameters
+        ----------
+        r: float
+            Source radius. If 0.0, creates a point source.
+        c: array_like:
+            Source center.
+        normal: array_like
+            Source normal. Photon propagation direction
+        na: float
+            Source numerical aperture along axis *[1, 1, 0]*.
+        angles: int
+            Numerical aperture discretization
+
+        Examples
+        -------
+        >>> d2_source(0.1, [0, 0, 0], [0, 0, 1], na=0.0, angles=1)
+        
+        Creates a collimated source with radius 0.1 centered at [0, 0, 0].
+
+        >>> d2_source(0.0, [0, 0, 0], [0, 0, 1], na=0.22, angles=11)
+
+        Creates a point source centered at [0, 0, 0] with numerical aperture 0.22. Angles are discretized by 0.04 (-0.22 to 0.22) in 11 points.
+
+        >>> d2_source(0.3, [0, 0, 0], [0, 0, 1], na=0.22, angles=11)
+
+        Creates a diverging source centered at [0, 0, 0] with numerical aperture 0.22 and radius 0.3.
+
+        '''
         xc, yc, zc = c
         x = numpy.arange(xc-r, xc+self.res, self.res)
         y = numpy.arange(yc-r, yc+self.res, self.res)
@@ -683,6 +992,25 @@ class Simu:
                             self.photons.append(photon([-xpos+2*xc, -ypos+2*yc, zc], normal2))
     
     def rotate(self, ang, axis, origin, ROI = None):
+        '''
+        Rotate a selected ROI in a given direction and origin. This function only rotates grid points that have index of refraction different of 1.
+
+        Parameters
+        ----------
+        ang: float
+            Angle of rotation (in radians).
+        axis: array_like
+            A 3 dimensional axis of rotation.
+        origin: array_like
+            A 3 dimensional origin position.
+        ROI: array_like
+            A 6 dimensional ROI in the form of **[xmin, xmax, ymin, ymax, zmin, zmax]**.
+
+        Raises
+        ------
+        Exception
+            If there is no element to rotate.
+        '''
         axis = axis / numpy.linalg.norm(axis)
         ux, uy, uz = axis
 
@@ -775,8 +1103,30 @@ class Simu:
             self.assign_n(grid_pos, ind_refr)
             self.assign_normal(grid_pos, normal)
 
-    def create_parabolic_section_element(self, c, n, th, wid, pp):
-        
+    def create_parabolic_surface_element(self, c, n, th, wid, pp):
+        '''
+        Creates a parabolic element surface.
+
+        Parameters
+        ----------
+        c: array_like
+            A 3 dimensional position.
+        n: float
+            The index of refraction. -1 creates a reflective material.
+        th: float
+            Thickness of the element. Y direction total size is given by this value.
+        wid: float
+            Width of the element. X direction total size is given by this value.
+        pp: float
+            P parameter of the parabola.
+
+        Notes
+        -----
+        Parabolic curve is defined as:
+
+        .. math:: 2pp * (Z-  Z0) = (Y-Y0)^{2} - (X-X0)^{2}
+
+        '''
         def assign(pos):
             xpos, ypos, zpos = pos
             ind = self.pos_to_grid([xpos, ypos, zpos])
@@ -800,14 +1150,21 @@ class Simu:
                         assign([xpos, -ypos+2*y0, zpos])
                         assign([-xpos+2*x0, -ypos+2*y0, zpos])
 
-        
-    def create_sphere_element(self, c, r, n):
-        
-        def assign(pos):
-            xpos, ypos, zpos = pos
-
 
     def create_sphere_element(self, c, r, n):
+        '''
+        Creates a spherical element.
+
+        Parameters
+        ----------
+        c: array_like
+            A 3 dimensional sphere center.
+        r: float
+            Sphere radius.
+        n: float
+            Element index of refraction.
+
+        '''
         
         def assign(pos):
             xpos, ypos, zpos = pos
@@ -835,6 +1192,22 @@ class Simu:
 
 
     def create_rectangle_element(self, val, n, normal):
+        '''
+        Creates a rectangular element.
+
+        Parameters
+        ----------
+        val: array_like
+            A 6 dimensional array containing [xmin, xmax, ymin, ymax, zmin, zmax]
+        n: float
+            The index of refraction
+        normal: array_like
+            A 3 dimensional array containing the surface normal. 
+
+        Notes
+        -----
+        You can use a rectangular element to destroy some of your active elements by setting index of refraction as 1.0 and normal vector as [0, 0, 0].
+        '''
         
         xmin, xmax, ymin, ymax, zmin, zmax = val
         xc, yc, zc = (xmin+xmax)/2., (ymin+ymax)/2., (zmax+zmin)/2.
