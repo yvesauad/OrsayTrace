@@ -24,7 +24,16 @@ class photon_list():
         self.photons = numpy.asarray([])
         self.condition_dict = dict()
 
-    def append_photon(self, photon):
+    def append_photon(self, photon: class.photon):
+    '''
+    Append a photon tp the photon_list given that the condition is True
+
+    Parameters
+    ----------
+    photon: class.photon
+        A photon class
+
+    '''
         if self.condition_dict:
             for cond, val in self.condition_dict.items():
                 for key, pval in photon.__dict__.items():
