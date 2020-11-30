@@ -11,16 +11,14 @@ from concurrent.futures import ThreadPoolExecutor
 class photon_list():
     '''
     photon_list is a class that bounds photons together by a plane and a condition. Plane is characterized by a normal vector and its value.
+    Parameters
+    ----------
+    normal: list
+        A 3 dimensional list stating the normal vector from plane
+    value: float
+        The plane independent variable in the form of x + y + z = value
     '''
     def __init__(self, normal: list(), value: float):
-        '''
-        Parameters
-        ----------
-        normal: list
-            A 3 dimensional list stating the normal vector from plane
-        value: float
-            The plane independent variable in the form of x + y + z = value
-        '''
         self.normal = normal / numpy.linalg.norm(normal)
         self.value = value
         self.photons = numpy.asarray([])
