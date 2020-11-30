@@ -1,12 +1,15 @@
 .. -*- mode: rst -*-
 
-|python_version|_ |pypi_version|_
+|python_version|_ |pypi_version|_ |rtd|_
 
 .. |pypi_version| image:: http://img.shields.io/pypi/v/orsaytrace.svg?style=flat
 .. _pypi_version: https://pypi.python.org/pypi/orsaytrace
 
 .. |python_version| image:: https://img.shields.io/pypi/pyversions/orsaytrace.svg?style=flat
 .. _python_version: https://pypi.python.org/pypi/orsaytrace
+
+.. |rtd| image:: https://readthedocs.org/projects/orsaytrace/badge/?version=latest
+.. _rtd: https://readthedocs.org/projects/orsaytrace/?badge=latest
 
 
 OrsayTrace
