@@ -9,7 +9,7 @@ Welcome to orsaytrace's documentation!
 Installation
 ____________
 
-Quick install using pip::
+Quick start and install using pip::
 
     pip install orsaytrace
 
