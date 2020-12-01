@@ -1,12 +1,11 @@
-import trace as ot
+import orsaytrace.trace as ot
 import numpy
 import matplotlib.pyplot as plt
 
-x, y, z, res = 5, 5, 10, 0.05
-
+x, y, z, res = 5, 5, 10, 0.03
 
 focus = 0.3
-yvertex = 0.5+0.3
+yvertex = 0.8
 thickness = 1.2
 p = 2.0
 r = 0.2
@@ -17,10 +16,10 @@ y_array = numpy.linspace(0, y/4, 101)
 
 a = ot.Simu(x, y, z, res)
 
-a.point_source(r, [0, 0, -z/2], [0, 0, 1])
+a.d2_source(r, [0, 0, -z/2], [0, 0, 1], 0.0, 1)
 
 a.create_parabolic_surface_element([0.0, yvertex, 0.0], -1.0, 2*thickness, 3.0, p) 
-#a.create_rectangle_element([-x/2, x/2, yvertex-focus, y/2, -z/2, z/2], 1.0, [0, 0, 0]) 
+a.create_rectangle_element([-x/2, x/2, yvertex-focus, y/2, -z/2, z/2], 1.0, [0, 0, 0])
 #a.rotate(numpy.pi/32, [0, 1, 0], [0, yvertex, 0.0], [-1.5, 1.5, -1.5, 1.5, -1.5, 1.5])
 
 for y in y_array:
@@ -39,7 +38,7 @@ std = numpy.asarray([photon_list.std_position() for photon_list in photon_lists]
 
 
 list_number = (numpy.where(std[:, 0]==min(std[:, 0])))[0][0]
-fac = 10
+fac = 25
 
 fig, axes = plt.subplots(nrows=2, ncols=3, sharex=False, sharey=False)
 axes[0, 0].plot(y_array, avg[:, 0], label='avg(X)')
@@ -67,16 +66,7 @@ axes[0, 2].plot(y_array, pdvertex, label='Pd Vertex', c='red')
 axes[0, 2].set_xlabel('Y')
 axes[0, 2].legend()
 
-#xmax = numpy.amax(pos_max[:, 0])
-#xmin = numpy.amin(pos_min[:, 0])
-#zmax = numpy.amax(pos_max[:, 2])
-#zmin = numpy.amin(pos_min[:, 2])
-
-
-#axes[0, 2].scatter(list_number, pd[list_number], label='Pd Centroid')
-#axes[0, 2].scatter(list_number, pdvertex[list_number], label='Pd Vertex')
 lists_pos = numpy.asarray([photon_list.get_positions() for photon_list in photon_lists])
-
 
 axes[1, 0].hist2d(lists_pos[list_number-fac][:, 0], lists_pos[list_number-fac][:, 2], 100, range=[[xmin, xmax], [zmin, zmax]])
 axes[1, 1].hist2d(lists_pos[list_number][:, 0], lists_pos[list_number][:, 2], 100, range=[[xmin, xmax], [zmin, zmax]])

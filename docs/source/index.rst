@@ -13,7 +13,6 @@ Quick start and install using pip::
 
     pip install orsaytrace
 
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

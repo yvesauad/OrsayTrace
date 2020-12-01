@@ -1,23 +1,398 @@
 Examples
 ========
 
-This explain the examples contained in this project
+Following documents explains how module works by means of several examples,in ascending order of complexity.
 
 Example 01
 ----------
-Example 01
+Optical system is simply a pair of lenses with same focus :math:`f = 2` and clear aperture of :math:`ap = 1.5`. We have used a perfect collimated source
+of :math:`d_{src} = 2` and distance between lenses are :math:`d = 6`. This distance is relative to the plane sides of each lens as::
+
+>>> a.create_thin_lens([0, 0, zlens1], focus1, 1.5, 1.43, 'convex-plane')
+
+Creates a thin 'convex-plane' in which the center of the plane part is given by first *array_like* argument. If we go block by block in our simulation::
+
+>>> a = ot.Simu(5, 5, 20, res)
+
+Creates the simulation cell size for a given resolution. In the next line::
+
+>>> a.d2_source(r_src, [0, 0, -9.5], [0, 0, 1], 0.0, 1)
+
+Creates a bi-dimensional source with a radius r_src centered at [0, 0, -9.5] and with photons in the [0, 0, 1] direction. Last two arguments are used for creating
+a diverging source. In this case we have set divergence at 0.0 with a single photon in this direction. After the creation of both lenses, we must created our analyses plans::
+
+>>> for z in z_array:
+>>>     a.create_analysis_plan([0, 0, 1], z)
+
+Analyses plan are the core of orsaytrace. They bind together any photons that any given time satisfies the plane equation:
+
+.. math::
+    a x + b y + c z = d
+
+Normal vector :math:`\vec{n} = [a, b, c]` and :math:`d` comes from first and second argument of *create_analysis_plan*, respectively.
+Normal vector is not intensity sensitive, which means::
+
+>>> a.create_analysis_plan([0, 0, 1], 1)
+
+Will create same plan as::
+
+>>> a.create_analysis_plan([0, 0, 2], 1)
+
+Following, we can view our created elements using (check complete documentation for available arguments)::
+
+>>> a.show_created_elements('all-noplan')
+
+And we can run our simulation by::
+
+>>> photon_lists = a.run()
+
+Simulation result is an numpy.array of shape based on the number of planes created. This is an photon_list object (check complete documentation for more) and has an
+important attribute '.photons'. This means that each index of this list is a photon_list and each photon_list has a 'photons' attribute. Other attributes are 'normal' and 'value'
+corresponding to the plane equation of the indicated plane. As we will see in the future, this class has also a 'condition_dict' attribute which forces the photon
+to have a specific property before being appended to class.photon_list.
+
+Optionally, one can also plug simulation result in::
+
+>>> a.show_elements(photon_lists, 'all-noplan')
+
+This will produce a 3D matplot lib with all the photons and elements created for each analysis plan.
+
+Results
+*******
+
+Note that after simulation is finished, we run a loop over our photon_lists object, the returned value of simulation run. As we have said, those are planes and contain
+convenient functions if you dont with to work with the whole set of 'photons' attribute. Just remember that each photon in photon_list.photons contains much more
+information, such as its position, intensity, normal vector, number of reflections, refractions etc. For the sake of clarity in this first example, we will show what::
+
+>>> photon_list.avg_divergence([0, 0, 1])
+
+is doing. Source code show us::
+
+    def avg_divergence(self, vec_ref):
+        '''
+        Calculates the average photon divergence from given a vector reference.
+
+        Parameters
+        ----------
+        vec: array_like
+            A 3 dimensional array of given direction.
+
+        Returns
+        ------
+        float
+            A float provenient from a numpy.average based on vector direction and propagation direction for each photon
+
+        '''
+        vec_ref = vec_ref / numpy.linalg.norm(vec_ref)
+        vals = numpy.average([numpy.dot(photon.normal, vec_ref)**2 for photon in self.photons])
+        return vals
+
+This means that, for each photon_list, we are avering the scalar product between the photon.normal and a given reference vector. So if you have a perfect collimated source
+propagating in [0, 0, 1] and applied this function using a  [0, 0, 1] reference vector, you would have a result of 1.0 because all individual photons are propagating in this
+direction and the scalar product is always 1.0. If your photons start to diverge from [0, 0, 1], scalar products are reduced and average is :math:`> 1`.
+
+Other three functions are easier to understand. They calculate the average distance of the photons in xy plane for a [0, 0] position in::
+
+>>> photon_list.avg_distance_axis_z([0, 0])
+
+And calculate absolute position in 3 dimensional for::
+
+>>> photon_list.avg_position()
+
+If one wish to see the created elements:
+
+.. figure:: figures/Example01_res0-02_view.png
+    :align: center
+
+    View from show_elements using a resolution of 0.02.
+
+.. figure:: figures/Example01_res0-05_side_view.png
+    :align: center
+
+    Side view from show_elements using a resolution of 0.05.
+
+Figures below show quantitative results of the simulation. Look how divergence is :math:`= 1.0` at the beginning and reduces almost abruptly as it reaches first lens
+second lens reduces slighly beam divergence relative to [0, 0, 1]. In the top right, we see beam starts with a 0.15 size and reaches a minimum during first focus. Second lens
+refocalizes the diverging beam of approximately 0.30. Beam reaches a minimum and continues to diverge until simulation cell is over.
+
+.. figure:: figures/Example01_res0-02.png
+    :align: center
+
+    Quantitative Results from a resolution of 0.02.
+
+Finally, both cells at the botton show the average distance in X and Y. As simulation is symmetrical relative to those axis, those must be values under our resolution
+factor. Both are 100x smaller than our resolution.
+
+
+Code
+****
+
+examples01.py::
+
+    import orsaytrace.trace as ot
+    import numpy
+    import matplotlib.pyplot as plt
+
+    z_array = numpy.linspace(-9.0, 9.0, 101)
+    focus1 = focus2 = 2.0
+    zlens1 = -6.0
+    d12 = 6.0
+    res = 0.08
+    r_src = 0.25
+
+    a = ot.Simu(5, 5, 20, res)
+
+    a.d2_source(r_src, [0, 0, -9.5], [0, 0, 1], 0.0, 1)
+
+    a.create_thin_lens([0, 0, zlens1], focus1, 1.5, 1.43, 'convex-plane')
+    a.create_thin_lens([0, 0, zlens1+d12], focus2, 1.5, 1.43, 'plane-convex')
+
+    for z in z_array:
+        a.create_analysis_plan([0, 0, 1], z)
+
+    a.show_created_elements('all-noplan')
+    photon_lists = a.run()
+    a.show_elements(photon_lists, 'all-noplan')
+
+    vals = numpy.asarray([])
+    vals_distance = numpy.asarray([])
+    vals_x = numpy.asarray([])
+    vals_y = numpy.asarray([])
+    for photon_list in photon_lists:
+        vals = numpy.append(vals, photon_list.avg_divergence([0, 0, 1]))
+        vals_distance = numpy.append(vals_distance, photon_list.avg_distance_axis_z([0, 0]))
+        vals_x = numpy.append(vals_x, photon_list.avg_position()[0])
+        vals_y = numpy.append(vals_y, photon_list.avg_position()[1])
+
+
+    fig, axes = plt.subplots(nrows=2, ncols=2, sharex=False, sharey=False, dpi=200)
+    axes[0, 0].plot(z_array, vals)
+    axes[0, 1].plot(z_array, vals_distance)
+    axes[1, 0].plot(z_array, vals_x)
+    axes[1, 1].plot(z_array, vals_y)
+
+    axes[0, 0].set_ylabel('Beam Divergence')
+    axes[0, 1].set_ylabel('Distance from Optical Axis')
+    axes[1, 0].set_ylabel('Average X')
+    axes[1, 1].set_ylabel('Average Y')
+
+    axes[0, 0].set_xlabel('Z (A.U.)')
+    axes[0, 1].set_xlabel('Z (A.U.)')
+    axes[1, 0].set_xlabel('Z (A.U.)')
+    axes[1, 1].set_xlabel('Z (A.U.)')
+
+    plt.show()
+
+
+
 
 Example 02
 ----------
+
+Second example is also pretty simple as well but has some differences from previous example which makes it educative on some functions. We begin by creating a pontual source::
+
+>>> a.d2_source(0.0, [0, 0, -4.0], [0, 0, 1], 0.12, 11)
+
+With 11x11 points between normal vectors [0.12, 0.12, 1] and [-0.12, -0.12, 1]. A single plane-convex lens is created and 201 planes are created along photon propagation
+direction [0, 0, 1]. Lens position is changed in z direction given by z_lens array.
+
+Results are saved in a list called all_my_photons. Each element of this list will contain 201 plans and each plan will constain a number given of photons saved
+in photon_list.photons.
+
+Results
+*******
+
+Again we use a convenient functions in class photon_list called::
+
+>>> photon_list.std_deviation()
+
+Which returns a 3 dimensional array of the standard deviation of position values for each given plane. We expect that starding deviation increases with the propagation
+of a diverging beam, stays constant for a collimated beam and reduces for a convergin beam. As we change lens Z position, we will match source and lens numerical
+aperture at a given point, producing a collimated beam with approximately no divergence.
+
 Example 02
 
+.. figure:: figures/Example02.png
+    :align: center
+
+    Measurement of 7 simulation points, 201 plans and 0.04 resolution.
+
+Better beam is found for a z position of :math:`z = -2.07`. Consering theoretical focal point is at :math:`z = -2.0` as the source is at :math:`z= -4.0`, we see how thin
+lens approximations deviates less than 5%. One can increase simulation resolution to find a convergent value.
+
+Code
+****
+
+examples02.py::
+
+    import orsaytrace.trace as ot
+    import numpy
+    import matplotlib.pyplot as plt
+
+    ########## SIMULATION PARAMETERS ###########
+
+    f = 2.0
+    lens_pos = -2.5
+    res = 0.04
+    pts = 201
+    sim_pts = 7
+
+    z_plans = numpy.linspace(-4.5, 4.5, pts)
+    z_lens = numpy.linspace(-2.5, -1.2, sim_pts)
+    all_my_photons = list()
+
+    for lens_pos in z_lens:
+
+        a = ot.Simu(5, 5, 10, res)
+
+        #Plane convex lens. Source is point source diverging.
+        a.d2_source(0.0, [0, 0, -4.0], [0, 0, 1], 0.12, 11)
+        a.create_thin_lens([0, 0, lens_pos], f, 1.75, 1.43, 'plane-convex')
+
+        for z in z_plans:
+            a.create_analysis_plan([0, 0, 1], z)
+
+        #a.show_created_elements('all-noplan')
+        all_my_photons.append(a.run())
+
+
+    results = numpy.zeros((sim_pts, pts))
+
+    for isim, simu_part in enumerate(all_my_photons):
+        #a.show_elements(all_my_photons[isim], 'photons')
+        for ilist, photon_list in enumerate(simu_part):
+            results[isim, ilist] = (photon_list.std_position()[1])
+
+    fig, axes = plt.subplots(nrows=1, ncols=1, sharex=False, sharey=False, dpi=200)
+
+    for index, result in enumerate(results):
+        axes.plot(z_plans, result, label='z_lens = ' + format(z_lens[index], '.2f'))
+
+    axes.set_xlabel('Z')
+    axes.set_ylabel('stdY')
+    plt.legend()
+    plt.show()
+
+
 Example 03
 ----------
-Example 03
+
+This simple example shows a little more in-depth how one can visualize and explore some flexibility features of this module. In order to rotate
+all elements with :math:`n_{refr} != 1.0`, One can use the rotation method::
+
+>>> a.rotate(numpy.arcsin(-na), [0, 1, 0], [0, 0, zlens])
+
+Rotation arguments can be viewed in full documentation, but this will basically rotate along axis [0, 1, 0] an amount of :math:`\theta = -arcsin(na)` centered
+at [0, 0, zlens], which is the center of flat surface of the lens. In order to show the flexibility of planes, we create a plan tilted at the same amount using::
+
+>>> a.create_analysis_plan([-na, 0, 1], z)
+
+And finally have used source with different normal vector as well. Do not worry about vector normalization, this is done during photon instantiation::
+
+>>> a.d2_source(r, [0.5, 0.0, -4.5], [-na, 0, 1], 0.0, 1)
+
+This would be roughly equivalent to a complete straight simulation. Note that rotate method is sensitive to call order. If one creates a lens after
+rotate, you would have a rotated and a on-axis lens. Also note that you can apply a ROI to your rotate method, selecting spatially which points to look up.
+This is also a less time-consuming task.
+
+Results
+*******
+
+First let us take a look at the first output. If you use 'all' in show_elements, plan inspection is activated.
+
+.. figure:: figures/Example03_res0-05_other_view.png
+    :align: center
+
+    Measurement of a rotated source, lens and planes. 7 plans and a resolution of 0.05.
+
+Rotation of all objects can be clearly seen, but a few photons also looks a little bit misplaced. This happens because rotation is a tricky
+transformation in a mesh. You need to rotate both the point and normal which not always corresponds to exactly same absolute values due to
+finite volume of each grid cube.
+
+There is a way of reducing dramatically this problem without the need of increasing too much resolution.
+This is using conditional plans. As 'refraction_count' and 'reflection_count' are photon attributes, you
+can set conditions on them in order to be appended to plan. Check full documentation for more info.
+To use this feature, one simply:
+
+>>> a.create_analysis_plan([-na, 0, 1], z, refraction_count=(1, 2))
+
+This will restrain photons that have suffered a number of refractions between 1 and 2, both included.
+Result of this simulation is shown below. Note how plans before the lens have nothing because
+they haven't already found a refractive (or reflective) element.
+
+.. figure:: figures/Example03_res0-05_other_view_refraction_count.png
+    :align: center
+
+    Measurement of a rotated source, lens and planes with a conditional. 7 plans and a resolution of 0.05.
+
+Finally, if we hide plans inspection and turn for much more plans, we would see:
+
+.. figure:: figures/Example03_res0-04_other_view_refraction_count_51_planes.png
+    :align: center
+
+    Measurement of a rotated source, lens and planes with a conditional. 7 plans and a resolution of 0.05.
+
+
+Code
+****
+
+example03.py::
+
+    import orsaytrace.trace as ot
+    import numpy
+    import matplotlib.pyplot as plt
+
+    z_array = numpy.linspace(-4.5, 4.5, 51)
+    res = 0.04
+
+    focus = 2.0
+    zlens = -2.0
+    r = 0.25
+    na = 0.2
+
+    # This example simple shows how to apply rotation to itens
+
+    a = ot.Simu(5, 5, 10, res)
+
+    a.d2_source(r, [0.5, 0.0, -4.5], [-na, 0, 1], 0.0, 1)
+    a.create_thin_lens([0, 0, zlens], focus, 1.5, 1.43, 'convex-plane')
+    a.rotate(numpy.arcsin(-na), [0, 1, 0], [0, 0, zlens])
+
+    for z in z_array:
+        a.create_analysis_plan([-na, 0, 1], z, refraction_count=(1, 2))
+
+    photon_lists = a.run()
+    a.show_elements(photon_lists, 'all-noplan')
+    #a.show_elements(photon_lists, 'all')
+
+    div_z = numpy.asarray([])
+    div_tilted = numpy.asarray([])
+    for photon_list in photon_lists:
+        div_z = numpy.append(div_z, photon_list.avg_divergence([0, 0, 1]))
+        div_tilted = numpy.append(div_tilted, photon_list.avg_divergence([-na, 0, 1]))
+
+    fig, axes = plt.subplots(nrows=1, ncols=2, sharex=False, sharey=False)
+    axes[0].plot(z_array, div_z)
+    axes[1].plot(z_array, div_tilted)
+
+    axes[0].set_ylabel('Beam Divergence')
+    axes[1].set_ylabel('Beam Divergence')
+
+    axes[0].set_xlabel('Z (A.U.)')
+    axes[1].set_xlabel('Z (A.U.)')
+
+    plt.show()
+
 
 Example 04
 ----------
-Example 04
+In this example, we study how a perfect collimated beam behaves if reflected by a off-axis parabolic mirror.
+The ideia is to construct a parabolic surface and remove a part of it using a rectangular element. This is
+systematically done during the creation of a thin_lens, but not visible to the user.
+
+At the beginning, we define a few constants that are important in order to understand the problem. Focus
+is the distance, in Y direction, of the top of the parabolic surface after material removal and its vertix.
+yvertex is the Y vertex position
 
 Example 05
 ----------

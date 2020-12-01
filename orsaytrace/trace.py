@@ -942,7 +942,7 @@ class Simu:
 
 
 
-    def d2_source(self, r, c=[0, 0, 0], normal=[0, 0, 1], na = 0.12, angles=1):
+    def d2_source(self, r, c=[0, 0, 0], normal=[0, 0, 1], na = 0.0, angles=1):
         '''
         Creates a 2d source along axis z with a numerical aperture
 

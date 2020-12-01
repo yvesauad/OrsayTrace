@@ -1,56 +1,53 @@
-import os
-import sys
-
-currentdir = os.getcwd()
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0,parentdir) 
-
-import trace as ot
+import orsaytrace.trace as ot
 import numpy
 import matplotlib.pyplot as plt
 
-########## SIMULATION PARAMETERS ###########
+z_array = numpy.linspace(-9.0, 9.0, 101)
+focus1 = focus2 = 2.0
+zlens1 = -6.0
+d12 = 6.0
+res = 0.08
+r_src = 0.25
 
-f = 2.0
-lens_pos = -2.5
-res = 0.04
-pts = 201
-sim_pts = 7
+a = ot.Simu(5, 5, 20, res)
 
-z_plans = numpy.linspace(-4.5, 4.5, pts)
-z_lens = numpy.linspace(-2.5, -1.2, sim_pts)
-all_my_photons = list()
+a.d2_source(r_src, [0, 0, -9.5], [0, 0, 1], 0.0, 1)
 
+a.create_thin_lens([0, 0, zlens1], focus1, 1.5, 1.43, 'convex-plane')
+a.create_thin_lens([0, 0, zlens1+d12], focus2, 1.5, 1.43, 'plane-convex')
 
-for lens_pos in z_lens:
+for z in z_array:
+    a.create_analysis_plan([0, 0, 1], z)
 
+a.show_created_elements('all-noplan')
+photon_lists = a.run()
+a.show_elements(photon_lists, 'all-noplan')
 
-    a = ot.Simu(5, 5, 10, res)
-
-    #Plane convex lens. Source is point source diverging.
-    a.d2_source(0.0, [0, 0, -4.0], [0, 0, 1], 0.12, 3)
-    a.create_thin_lens([0, 0, lens_pos], f, 1.75, 1.43, 'plane-convex')
-
-    for z in z_plans:
-        a.create_analysis_plan([0, 0, 1], z)
-
-    #a.show_created_elements('all-noplan')
-    all_my_photons.append(a.run())
+vals = numpy.asarray([])
+vals_distance = numpy.asarray([])
+vals_x = numpy.asarray([])
+vals_y = numpy.asarray([])
+for photon_list in photon_lists:
+    vals = numpy.append(vals, photon_list.avg_divergence([0, 0, 1]))
+    vals_distance = numpy.append(vals_distance, photon_list.avg_distance_axis_z([0, 0]))
+    vals_x = numpy.append(vals_x, photon_list.avg_position()[0])
+    vals_y = numpy.append(vals_y, photon_list.avg_position()[1])
 
 
-results = numpy.zeros((sim_pts, pts))
+fig, axes = plt.subplots(nrows=2, ncols=2, sharex=False, sharey=False, dpi=200)
+axes[0, 0].plot(z_array, vals)
+axes[0, 1].plot(z_array, vals_distance)
+axes[1, 0].plot(z_array, vals_x)
+axes[1, 1].plot(z_array, vals_y)
 
-for isim, simu_part in enumerate(all_my_photons):
-    #a.show_elements(all_my_photons[isim], 'photons')
-    for ilist, photon_list in enumerate(simu_part):
-        results[isim, ilist] = (photon_list.std_position()[1])
-            
-fig, axes = plt.subplots(nrows=1, ncols=1, sharex=False, sharey=False, dpi=200)
+axes[0, 0].set_ylabel('Beam Divergence')
+axes[0, 1].set_ylabel('Distance from Optical Axis')
+axes[1, 0].set_ylabel('Average X')
+axes[1, 1].set_ylabel('Average Y')
 
-for index, result in enumerate(results):
-    axes.plot(z_plans, result, label='z_lens = ' + format(z_lens[index], '.2f'))
+axes[0, 0].set_xlabel('Z (A.U.)')
+axes[0, 1].set_xlabel('Z (A.U.)')
+axes[1, 0].set_xlabel('Z (A.U.)')
+axes[1, 1].set_xlabel('Z (A.U.)')
 
-axes.set_xlabel('Z')
-axes.set_ylabel('stdY')
-plt.legend()
 plt.show()

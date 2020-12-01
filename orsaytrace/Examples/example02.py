@@ -1,4 +1,4 @@
-import trace as ot
+import orsaytrace.trace as ot
 import numpy
 import matplotlib.pyplot as plt
 
@@ -14,22 +14,17 @@ z_plans = numpy.linspace(-4.5, 4.5, pts)
 z_lens = numpy.linspace(-2.5, -1.2, sim_pts)
 all_my_photons = list()
 
-
 for lens_pos in z_lens:
-
 
     a = ot.Simu(5, 5, 10, res)
 
-    #Plane convex lens. Source is point source diverging.
-    a.d2_source(0.0, [0, 0, -4.0], [0, 0, 1], 0.12, 3)
+    a.d2_source(0.0, [0, 0, -4.0], [0, 0, 1], 0.12, 11)
     a.create_thin_lens([0, 0, lens_pos], f, 1.75, 1.43, 'plane-convex')
 
     for z in z_plans:
         a.create_analysis_plan([0, 0, 1], z)
 
-    #a.show_created_elements('all-noplan')
     all_my_photons.append(a.run())
-
 
 results = numpy.zeros((sim_pts, pts))
 
