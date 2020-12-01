@@ -110,13 +110,14 @@ class photon_list():
         new_photon.normal = new_photon.normal[0], -new_photon.normal[1], new_photon.normal[2]
         self.append_photon(new_photon)
 
-    def avg_divergence(self, vec_ref: list()):
+    def avg_divergence(self, vec_ref):
         '''
         Calculates the average photon divergence from given a vector reference.
 
         Parameters
         ----------
-        vec: A 3 dimensional list of given direction.
+        vec: array_like
+            A 3 dimensional array of given direction.
 
         Returns
         ------

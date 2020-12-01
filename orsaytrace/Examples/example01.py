@@ -1,3 +1,10 @@
+import os
+import sys
+
+currentdir = os.getcwd()
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir) 
+
 import trace as ot
 import numpy
 import matplotlib.pyplot as plt
