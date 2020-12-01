@@ -1405,16 +1405,16 @@ class Simu:
         plist.condition_dict = kargs
         self.photon_lists = numpy.append(self.photon_lists, plist)
     
-    def run_photon(self, photon_list, rindex):
+    def run_photon(self, initial_photons, rindex):
         '''
         Simulatiom run for the initial set (or subset) of photons. It terminates when all photons leave the cell.
 
         Parameters
         ----------
-        photon_list: array_like
+        initial_photon_list: array_like
             The complete set (or subset) of the intial photons.
         rindex: int
-            Run index. Used for multi process simulation. 
+            Run index. Used for multi process simulations. 
 
         See Also
         --------
@@ -1422,7 +1422,7 @@ class Simu:
             Starts the simulation for each set or subset of photon. Can be used with multi processing.
 
         '''
-        for photon in tqdm(photon_list[rindex], desc=f'Running'):
+        for photon in tqdm(initial_photons[rindex], desc=f'Running'):
             while True:
                 if photon.update(self.normal_and_index_from_pos(photon.pos)): photon.move(self.res)
                 photon.move(self.res)
@@ -1481,8 +1481,15 @@ class Simu:
         for index, photon_list in enumerate(self.photon_lists):
             for photon in photon_list.photons:
                 if ysym: self.photon_lists[index].add_symmetric_yphoton(photon)
-
+        
         return self.split_photon_lists[run_index]
+
+
+    def merge_split_photon_lists(self):
+        for index, photon_list in enumerate(self.split_photon_lists):
+            for photon in photon_list.photons:
+                self.photon_lists[index].append_photon(photon)
+        return self.photon_lists
 
     def merge_photon_lists(self, my_photon_lists):
         '''
@@ -1500,7 +1507,10 @@ class Simu:
         '''
         for index, photon_list in enumerate(my_photon_lists):
             for photon in photon_list.photons:
-                self.photon_lists[index].append_photon(photon)
+                if photon not in self.photon_lists[index].photons:
+                    self.photon_lists[index].append_photon(photon)
+                else:
+                    print('***WARNING***: Duplicating photon in the list. Photon will not be added.')
         return self.photon_lists
 
     def reset(self):

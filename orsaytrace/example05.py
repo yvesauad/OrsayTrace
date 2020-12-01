@@ -40,7 +40,6 @@ if __name__ == "__main__":
         for index, futures in enumerate(future_values):
             new_photon_list = a.merge_photon_lists(futures.result())
         
-        
 
         #a.show_elements(futures.result(), 'all-noplan')
         #a.show_elements(new_photon_list, 'all-noplan')
