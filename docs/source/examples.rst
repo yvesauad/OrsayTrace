@@ -387,12 +387,79 @@ example03.py::
 Example 04
 ----------
 In this example, we study how a perfect collimated beam behaves if reflected by a off-axis parabolic mirror.
-The ideia is to construct a parabolic surface and remove a part of it using a rectangular element. This is
+The ideia is to construct a parabolic surface and remove its upper part using a rectangular element. This is
 systematically done during the creation of a thin_lens, but not visible to the user.
 
 At the beginning, we define a few constants that are important in order to understand the problem. Focus
-is the distance, in Y direction, of the top of the parabolic surface after material removal and its vertix.
-yvertex is the Y vertex position
+is the distance, in Y direction, of the top of the parabolic surface after material removal to its vertex.
+yvertex is the Y vertex position. Source is at [0, 0, -5], which means source center in z axis is arriving in the
+lower botton part of the mirror.
+
+We have created several plans in Y direction with the condition of a minimal of one reflection::
+
+>>> for y in y_array:
+>>>    a.create_analysis_plan([0, 1, 0], y, reflection_count = 1)
+
+In this example, several built-in function available to photon_list class have been used. New function relative
+to previous examples are::
+
+>>> photon_list.get_average_weighted_inverse()
+>>> photon_list.get_average_weighted_inverse_axis_y([0, -p/2.])
+
+They are very similar functions. The first computes the weighted inverse distance of each photon relative to average photon
+position. Second function computes the weighted inverse distance relative to a given point; in this case, we have
+used point in x-z plan [0, -p/2]. As we know from a parabola, this is its focal point.
+
+.. note::
+    The weight in those functions comes from intensity photon attribute. By default, they are equal to a unity
+    and means we are basically counting photons. It is easy to run a loop over the initial photon list and change
+    its intensity based on another attribute, such as photon position.
+
+.. figure:: figures/Example04_begin.png
+    :align: center
+
+    *Figure 4.1: Simulation starting point using a resolution of 0.05.*
+
+Both plots above explains our setup. Photons arrive with no divergence and converges to the parabola focal point.
+In order to examine this problem, we will plot position average and standard deviation for X-Z coordinates. We will
+also calculated the inverse of the distance using two reference points, as explained before
+
+In practice, first weighted inverse (from average position) is a moving point. It goes along photons center of mass
+and we will see it propagating when we plot the average for X-Z coordinates. Second weighted inverse is a static
+point. We will discuss the meaning of this analyses in results.
+
+.. figure:: figures/Example04_end.png
+    :align: center
+
+    *Figure 4.2: Simulation end point using a resolution of 0.05.*
+
+Results
+*******
+
+.. figure:: figures/Example04_res0-008.png
+    :align: center
+
+    *Figure 4.3: Left: Average position for X-Z. Center: Standard deviation for x-Z. Right: Weighted inverse for center of
+    mass and for parabola focal point.*
+
+.. figure:: figures/Example04_res0-008_02.png
+    :align: center
+
+    *Figure 4.4: Three distinct snapshots of the beam propagating in Y direction. Position are relative to
+    the black dots shown in previous avera figure.*
+
+.. figure:: figures/Example04_res0.008.gif
+    :align: center
+
+    *Figure 4.5: Left: Animation of X-Z plane of the beam propagating in Y axis.*
+
+.. figure:: figures/Example04_res0.015_pi-32_tilted.gif
+    :align: center
+
+    *Figure 4.5: Left: Animation of X-Z plane of the beam propagating in Y axis.*
+
+Code
+****
 
 Example 05
 ----------
