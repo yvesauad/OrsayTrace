@@ -550,7 +550,7 @@ class Simu:
         self.grid = (int(x/res), int(y/res), int(z/res))
         self.index = numpy.ones(self.grid)
         self.normal = numpy.asarray([numpy.zeros(self.grid), numpy.zeros(self.grid), numpy.zeros(self.grid)])
-        self.photons = list()
+        self.photons = numpy.asarray([])
         self.photon_lists=numpy.asarray([])
         self.x = numpy.linspace(-self.size[0]/2., self.size[0]/2., self.grid[0])
         self.y = numpy.linspace(-self.size[1]/2., self.size[1]/2., self.grid[1])
@@ -714,7 +714,7 @@ class Simu:
             If value is outside cell boundaries
         '''
         #this returns current index of refraction of a given photon in a given position
-
+        
         assert all([abs(pos[i])<=self.size[i]/2.0 for i in range(3)])
         indexes = self.pos_to_grid(pos)
         return self.index[indexes[0], indexes[1], indexes[2]]
@@ -986,10 +986,10 @@ class Simu:
                     for nax in naper:
                         for nay in naper:
                             normal2 = numpy.add(normal, numpy.multiply([1, 1, 0], [nax, nay, 0]))
-                            self.photons.append(photon([xpos, ypos, zc], normal2))
-                            self.photons.append(photon([-xpos+2*xc, ypos, zc], normal2))
-                            self.photons.append(photon([xpos, -ypos+2*yc, zc], normal2))
-                            self.photons.append(photon([-xpos+2*xc, -ypos+2*yc, zc], normal2))
+                            self.photons = numpy.append(self.photons, photon([xpos, ypos, zc], normal2))
+                            self.photons = numpy.append(self.photons, photon([-xpos+2*xc, ypos, zc], normal2))
+                            self.photons = numpy.append(self.photons, photon([xpos, -ypos+2*yc, zc], normal2))
+                            self.photons = numpy.append(self.photons, photon([-xpos+2*xc, -ypos+2*yc, zc], normal2))
     
     def rotate(self, ang, axis, origin, ROI = None):
         '''
@@ -1214,12 +1214,12 @@ class Simu:
         xl, yl, zl = (xmax-xmin)/2., (ymax-ymin)/2., (zmax-zmin)/2.
         assert xl>=0 and yl>=0 and zl>=0
 
-        x = [x for x in numpy.arange(xc-xl, xc+self.res, self.res/self.ss) if abs(x)<self.size[0]/2. and abs(-x+2*xc)<self.size[0]/2.]
-        y = [y for y in numpy.arange(yc-yl, yc+self.res, self.res/self.ss) if abs(y)<self.size[1]/2. and abs(-y+2*yc)<self.size[1]/2.]
-        z = [z for z in numpy.arange(zc-zl, zc+self.res, self.res/self.ss) if abs(z)<self.size[2]/2. and abs(-z+2*zc)<self.size[2]/2.]
+        x = [x for x in numpy.arange(xc-xl, xc+xl+self.res, self.res/self.ss) if abs(x)<self.size[0]/2.]
+        y = [y for y in numpy.arange(yc-yl, yc+yl+self.res, self.res/self.ss) if abs(y)<self.size[1]/2.]
+        z = [z for z in numpy.arange(zc-zl, zc+zl+self.res, self.res/self.ss) if abs(z)<self.size[2]/2.]
         
         min_index = self.pos_to_grid([min(x), min(y), min(z)])
-        max_index = self.pos_to_grid([-min(x)+2*xc+1, -min(y)+2*yc+1, -min(z)+2*zc+1])
+        max_index = self.pos_to_grid([max(x), max(y), max(z)])
         
         self.assign_block_n(min_index, max_index, n)
         self.assign_block_normal(min_index, max_index, normal)
@@ -1295,19 +1295,19 @@ class Simu:
         xc, yc, zp = cplane
         r = focus/2.0
         assert focus/2.>=aperture/2.
-        assert lens_type=='plane_convex' or lens_type=='convex-plane'
+        assert lens_type=='plane-convex' or lens_type=='convex-plane'
         if lens_type=='plane-convex': zc = zp - numpy.sqrt((focus/2.0)**2 - (aperture/2.)**2) #plane_convex
         if lens_type=='convex-plane': zc = zp + numpy.sqrt((focus/2.0)**2 - (aperture/2.)**2) #convex-plane
 
-        self.create_sphere_element([xc, yc, zc], focus/2., index_refr)
-        
-        if lens_type=='plane-convex':
-            self.create_rectangle_element([xc-r-self.res, xc+r, yc-r-self.res, yc+r, zc-r-self.res, zp], 1.0, [0, 0, 0])
+        u = 2 * self.res #margin of exclusion
 
-        if lens_type=='convex-plane':
-            self.create_rectangle_element([xc-r-self.res, xc+r, yc-r-self.res, yc+r, zp-self.res, zc+r], 1.0, [0, 0, 0])
+        self.create_sphere_element([xc, yc, zc], focus/2., index_refr)
+        if lens_type=='plane-convex':
+            self.create_rectangle_element([xc-r-u, xc+r+u, yc-r-u, yc+r+u, zc-r-u, zp+u/2.], 1.0, [0, 0, 0])
+        elif lens_type=='convex-plane':
+            self.create_rectangle_element([xc-r-u, xc+r+u, yc-r-u, yc+r+u, zp-u/2., zc+r+u], 1.0, [0, 0, 0])
         
-        self.create_cylinder_element([xc, yc, zp], aperture/2., 0.0, index_refr, [0, 0, 1])
+        self.create_cylinder_element([xc, yc, zp], aperture/2+self.res, self.res, index_refr, [0, 0, 1])
 
     def distance(self, vec1, vec2):
         '''
@@ -1424,7 +1424,9 @@ class Simu:
         '''
         for photon in tqdm(initial_photons[rindex], desc=f'Running'):
             while True:
-                if photon.update(self.normal_and_index_from_pos(photon.pos)): photon.move(self.res)
+                if photon.update(self.normal_and_index_from_pos(photon.pos)):
+                    photon.move(self.res)
+                    self.check_analysis_plan(photon, rindex)
                 photon.move(self.res)
                 if not self.is_photon_in_cell(photon):
                     self.photons[rindex] = [photons for photons in self.photons[rindex] if photons!=photon]
@@ -1455,9 +1457,11 @@ class Simu:
         Raises
         ------
         AssertionError
-            Raises an assertionError if run_index is smaller than split. You cannot run subset 1 if you have not splitted your initial photon array. Maximum run_index is always split-1.
+            Raises an assertionError if run_index is smaller than split. You cannot run subset 1 if you have not splitted your initial photon array. Maximum run_index is always split-1. Raises an AssertionError also if there is no photons in the initial set.
         '''
         assert run_index<split
+        assert self.photons.size
+        
         n = split
 
         if xsym:
@@ -1513,10 +1517,21 @@ class Simu:
                     print('***WARNING***: Duplicating photon in the list. Photon will not be added.')
         return self.photon_lists
 
-    def reset(self):
+    def reset_photons(self):
         '''
         Reset initial photon lists in order to run simulation a second time.
 
         '''
-        pass
+        self.photons = numpy.asarray([])
 
+        return True
+
+    def reset_structures(self):
+        '''
+        Reset initial structures in order to run simulation a second time.
+        '''
+        self.index = numpy.ones(self.grid)
+        self.normal = numpy.asarray([numpy.zeros(self.grid), numpy.zeros(self.grid), numpy.zeros(self.grid)])
+        
+        return True
+    
