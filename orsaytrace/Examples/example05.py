@@ -1,30 +1,42 @@
 import orsaytrace.trace as ot
 import numpy
-import concurrent.futures
+#import concurrent.futures
+import multiprocessing
 import time
 
-x, y, z, res = 5, 5, 5, 0.02
-y_array = numpy.linspace(0, y/4, 201)
-process = 12
+x, y, z, res = 5, 5, 5, 0.05
+z_array = numpy.linspace(-z/4, +z/4, 30)
+nproc = 4
 
-start = time.clock()
+start = time.perf_counter()
 
 if __name__ == "__main__":
-    with concurrent.futures.ProcessPoolExecutor(max_workers = process) as executor:
 
-        a = ot.Simu(x, y, z, res)
+    manager = multiprocessing.Manager()
+    return_dict = manager.dict()
 
-        a.d2_source(0.2, [0, 0, -z/2], [0, 0, 1], 0.0, 1)
+    a = ot.Simu(x, y, z, res)
 
-        for y in y_array:
-            a.create_analysis_plan([0, 0, 1], y)
-        
-        future_values = [executor.submit(a.run, i, process) for i in numpy.arange(0, process)]
-        
-        for index, futures in enumerate(future_values):
-            new_photon_list = a.merge_photon_lists(futures.result())
+    a.d2_source(0.0, [0, 0, -z/4], [0, 0, 1], 0.39, 31)
 
-        end = time.clock()
-        print(end - start)
+    for z in z_array:
+        a.create_analysis_plan([0, 0, 1], z)
+
+    a.prepare_acquisition(nproc)
+
+    jobs = []
+    for i in numpy.arange(0, nproc):
+        p = multiprocessing.Process(target=a.run, args=(i, True, return_dict))
+        jobs.append(p)
+        p.start()
+
+    for index, proc in enumerate(jobs):
+        proc.join()
+        if index==0: a.merge_photon_lists(return_dict.values()[index])
+
+    #a.show_elements(a.photon_lists)
+
+    end = time.perf_counter()
+    print(end - start)
 
 

@@ -1338,7 +1338,7 @@ class Simu:
         else:
             return False
 
-    def check_analysis_plan(self, photon, rindex):
+    def check_analysis_plan(self, photon):
         '''
         Check if photon is in a created analysis plan.
 
@@ -1349,7 +1349,7 @@ class Simu:
             Run index. Used for multi process simulations.
         '''
         pos = photon.pos
-        for index, planes in enumerate(self.split_photon_lists[rindex]):
+        for index, planes in enumerate(self.photon_lists):
             if planes.distance_point_to_plane(pos)<=self.res/2.0:
                 planes.add_photon(photon)
 
@@ -1418,18 +1418,25 @@ class Simu:
 
         '''
         for photon in tqdm(initial_photons[rindex], desc=f'Running'):
+            #while self.is_photon_in_cell(photon):
             while True:
                 if photon.update(self.normal_and_index_from_pos(photon.pos)):
                     photon.move(self.res)
-                    self.check_analysis_plan(photon, rindex)
+                    self.check_analysis_plan(photon)
                 photon.move(self.res)
                 if not self.is_photon_in_cell(photon):
                     self.photons[rindex] = [photons for photons in self.photons[rindex] if photons!=photon]
                     break
-                self.check_analysis_plan(photon, rindex)
+                self.check_analysis_plan(photon)
 
+    def prepare_acquisition(self, split = 1):
+        assert self.photons.size
+        assert split>0
 
-    def run(self, run_index=0, split=1, xsym=False, ysym=False):
+        self.photons = numpy.asarray(self.photons)
+        self.photons = numpy.array_split(self.photons, split)
+
+    def run(self, run_index=0, multiprocessing=False, return_dict=dict() , xsym=False, ysym=False):
         '''
         Simulation run main function.
 
@@ -1454,22 +1461,16 @@ class Simu:
         AssertionError
             Raises an assertionError if run_index is smaller than split. You cannot run subset 1 if you have not splitted your initial photon array. Maximum run_index is always split-1. Raises an AssertionError also if there is no photons in the initial set.
         '''
-        assert run_index<split
-        assert self.photons.size
-        
-        n = split
+
+        if not multiprocessing:
+            self.prepare_acquisition(1)
+
+        assert len(self.photons)>run_index
 
         if xsym:
             self.photons = [photons for photons in self.photons if (photons.pos[0]>=0. and numpy.dot(photons.normal, [1, 0, 0])>=0.)]
-        
         if ysym:
             self.photons = [photons for photons in self.photons if (photons.pos[1]>=0. and numpy.dot(photons.normal, [0, 1, 0])>=0.)]
-
-
-        self.photons = numpy.asarray(self.photons)
-        self.photons = numpy.array_split(self.photons, n)
-
-        self.split_photon_lists = numpy.asarray([self.photon_lists for i in range(n)])
 
         self.run_photon(self.photons, run_index)
 
@@ -1480,14 +1481,8 @@ class Simu:
         for index, photon_list in enumerate(self.photon_lists):
             for photon in photon_list.photons:
                 if ysym: self.photon_lists[index].add_symmetric_yphoton(photon)
-        
-        return self.split_photon_lists[run_index]
 
-
-    def merge_split_photon_lists(self):
-        for index, photon_list in enumerate(self.split_photon_lists):
-            for photon in photon_list.photons:
-                self.photon_lists[index].append_photon(photon)
+        return_dict[run_index] = self.photon_lists
         return self.photon_lists
 
     def merge_photon_lists(self, my_photon_lists):
@@ -1509,6 +1504,7 @@ class Simu:
                 if photon not in self.photon_lists[index].photons:
                     self.photon_lists[index].append_photon(photon)
                 else:
+                    #This does not work using the return dict. It is very strange that we have different objects
                     print('***WARNING***: Duplicating photon in the list. Photon will not be added.')
         return self.photon_lists
 

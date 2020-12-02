@@ -3,7 +3,7 @@ import numpy
 import matplotlib.pyplot as plt
 
 z_array = numpy.linspace(-4.5, 4.5, 51)
-res = 0.04
+res = 0.2
 
 focus = 2.0
 zlens = -2.0
