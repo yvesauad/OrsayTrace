@@ -1,11 +1,7 @@
 import numpy
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.widgets import Slider
-import time
 from tqdm import tqdm
-from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures import ThreadPoolExecutor
 
 
 class photon_list():
@@ -921,25 +917,6 @@ class Simu:
         
         plt.legend()
         plt.show()
-
-    def point_source(self, r, c, normal=[0, 0, 1]):
-        '''
-        #TODO
-        '''
-        xc, yc, zc = c
-        x = numpy.arange(xc-r, xc+self.res, self.res)
-        y = numpy.arange(yc-r, yc+self.res, self.res)
-        if not x.size>0:
-            x=[0]
-            y=[0]
-        for xpos in tqdm(x, desc='Source'):
-            for ypos in y:
-                if xpos**2+ypos**2<=r**2:
-                    self.photons.append(photon([xpos, ypos, zc], normal))
-                    self.photons.append(photon([-xpos, ypos, zc], normal))
-                    self.photons.append(photon([xpos, -ypos, zc], normal))
-                    self.photons.append(photon([-xpos, -ypos, zc], normal))
-
 
 
     def d2_source(self, r, c=[0, 0, 0], normal=[0, 0, 1], na = 0.0, angles=1):

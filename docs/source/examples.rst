@@ -3,8 +3,8 @@ Examples
 
 Following documents explains how module works by means of several examples,in ascending order of complexity.
 
-Example 01
-----------
+Pair of Lenses
+--------------
 Optical system is simply a pair of lenses with same focus :math:`f = 2` and clear aperture of :math:`ap = 1.5`. We have used a perfect collimated source
 of :math:`d_{src} = 2` and distance between lenses are :math:`d = 6`. This distance is relative to the plane sides of each lens as::
 
@@ -186,10 +186,10 @@ examples01.py::
 
 
 
-Example 02
-----------
+Scanning an object position
+---------------------------
 
-Second example is also pretty simple as well but has some differences from previous example which makes it educative on some functions. We begin by creating a pontual source::
+Second example is also pretty simple as well but has some differences from previous example which makes it educative on some functions. We begin by creating a punctual source::
 
 >>> a.d2_source(0.0, [0, 0, -4.0], [0, 0, 1], 0.12, 11)
 
@@ -274,8 +274,8 @@ examples02.py::
     plt.show()
 
 
-Example 03
-----------
+Exploring Rotation
+------------------
 
 This simple example shows a little more in-depth how one can visualize and explore some flexibility features of this module. In order to rotate
 all elements with :math:`n_{refr} != 1.0`, One can use the rotation method::
@@ -384,8 +384,8 @@ example03.py::
     plt.show()
 
 
-Example 04
-----------
+Other Geometries
+----------------
 In this example, we study how a perfect collimated beam behaves if reflected by a off-axis parabolic mirror.
 The ideia is to construct a parabolic surface and remove its upper part using a rectangular element. This is
 systematically done during the creation of a thin_lens, but not visible to the user.
@@ -471,7 +471,7 @@ the minimum of the standard deviation (focal point). We see focal point correspo
     :align: center
 
     *Figure 4.5: Three distinct snapshots of the beam propagating in Y direction. Position are relative to
-    the black dots shown in previous avera figure.*
+    the black dots shown in previous average figure.*
 
 In Figure 4.6, we have used animation module present in the standard matplotlib library to produce
 an animated image .gif::
@@ -483,23 +483,66 @@ an animated image .gif::
 
     *Figure 4.6: Left: Animation of X-Z plane of the beam propagating in Y axis.*
 
-
-
+In order to check the effect of mirror tilting, we added a :math:`\theta = \frac{\pi}{64} \approx 2.8^{\circ}` with respect to
+the [0, 1, 0] diction, as shown in Figure 4.3. Beam does not cross :math:`(x, z) = (0, -p/2)` simply because rotation changed
+focal point. Using centroid we see weighted inverse does not change much. Source is still non-astigmatic with respect to Y axis.
 
 .. figure:: figures/Example04_res0-01_tilted_pi-64.png
     :align: center
 
-    *Figure 4.7 Left: Animation of X-Z plane of the beam propagating in Y axis.*
+    *Figure 4.7 Left: Left: Average position for X-Z. Center: Standard deviation for x-Z. Right: Weighted inverse for center of
+    mass and for parabola focal point. Beam rotated with respect to Y.*
+
+Snapshots show that beam is propagating in X axis as well, as expected by a rotation in this direction. Center of mass Z propagation
+is pretty much the same.
 
 .. figure:: figures/Example04_res0-01_02_tilted_pi-64.png
     :align: center
 
-    *Figure 4.8: Left: Animation of X-Z plane of the beam propagating in Y axis.*
+    *Figure 4.8: Three distinct snapshots of the beam propagating in Y direction. Position are relative to
+    the black dots shown in previous average figure. Beam rotated with respect to Y.*
+
+Finally, we can also export a .gif animation in order to see beam propagation.
 
 .. figure:: figures/Example04_res0-01_pi-64_tilted.gif
     :align: center
 
-    *Figure 4.9: Left: Animation of X-Z plane of the beam propagating in Y axis.*
+    *Figure 4.9: Left: Animation of X-Z plane of the beam propagating in Y axis. Beam rotated with respect to Y.*
+
+We can also add a :math:`\theta = \frac{\pi}{16} \approx 11.2^{\circ}` rotation but along X axis. Results interpretation
+is pretty much the same as we did in the last two examples. Beam is now propagating more closely to a
+:math:`\theta = \frac{\pi}{2}` trajectory, so Z propagation reduces dramatically. For this example, analyses plans
+were slighly modified. We have used a higher portion of Y semi space and double of points::
+
+>>> y_array = numpy.linspace(0, y/3, 401)
+
+.. figure:: figures/Example04_rotation-X-axis.png
+    :align: center
+
+    *Figure 4.10 Beam rotated with respect to X.*
+
+First it is important to note how the beam now looks very stigmatic, which
+
+.. figure:: figures/Example04_res0-01_tilted_pi-16-X-axis.png
+    :align: center
+
+    *Figure 4.11 Left: Average position for X-Z. Center: Standard deviation for x-Z. Right: Weighted inverse for center of
+    mass and for parabola focal point. Beam rotated with respect to X.*
+
+Snapshots show that beam is propagating less in Z. Beam is symmetric relative to X (divergence smaller than resolution).
+
+.. figure:: figures/Example04_res0-01_02_tilted_pi-16-X-axis.png
+    :align: center
+
+    *Figure 4.12: Three distinct snapshots of the beam propagating in Y direction. Position are relative to
+    the black dots shown in previous average figure. Beam rotated with respect to X.*
+
+If we export a .gif animation in order to see beam propagation, we have the following
+
+.. figure:: figures/Example04_res0-01_pi-16_tilted-X-axis.gif
+    :align: center
+
+    *Figure 4.13: Left: Animation of X-Z plane of the beam propagating in Y axis. Beam rotated with respect to X.*
 
 Code
 ****
@@ -616,6 +659,49 @@ example04.py::
 
 
 
-Example 05
-----------
-Example 05
+Multi Processing
+----------------
+
+In this example, we show how can one use python standard library concurrent.futures
+
+Result
+******
+
+.. figure:: figures/Example05.png
+    :align: center
+
+    *Figure 5.1: Left: Animation of X-Z plane of the beam propagating in Y axis. Beam rotated with respect to X.*
+
+Code
+****
+
+example05.py::
+
+    import orsaytrace.trace as ot
+    import numpy
+    import concurrent.futures
+    import time
+
+    x, y, z, res = 5, 5, 5, 0.02
+    y_array = numpy.linspace(0, y/4, 201)
+    process = 12
+
+    start = time.clock()
+
+    if __name__ == "__main__":
+        with concurrent.futures.ProcessPoolExecutor(max_workers = process) as executor:
+
+            a = ot.Simu(x, y, z, res)
+
+            a.d2_source(0.2, [0, 0, -z/2], [0, 0, 1], 0.0, 1)
+
+            for y in y_array:
+                a.create_analysis_plan([0, 0, 1], y)
+
+            future_values = [executor.submit(a.run, i, process) for i in numpy.arange(0, process)]
+
+            for index, futures in enumerate(future_values):
+                new_photon_list = a.merge_photon_lists(futures.result())
+
+            end = time.clock()
+            print(end - start)
