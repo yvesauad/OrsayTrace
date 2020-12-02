@@ -5,7 +5,7 @@ mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 
-x, y, z, res = 5, 5, 10, 0.015
+x, y, z, res = 5, 5, 10, 0.04
 
 focus = 0.3
 yvertex = 0.8
@@ -13,7 +13,7 @@ thickness = 1.2
 p = 2.0
 r = 0.2
 
-xmax, xmin, zmax, zmin = 0.3, -0.3, -0.25, -2.0
+xmax, xmin, zmax, zmin = 0.35, -0.35, -0.25, -2.0
 
 y_array = numpy.linspace(0, y/4, 201)
 
@@ -23,7 +23,7 @@ a.d2_source(r, [0, 0, -z/2], [0, 0, 1], 0.0, 1)
 
 a.create_parabolic_surface_element([0.0, yvertex, 0.0], -1.0, 2*thickness, 3.0, p) 
 a.create_rectangle_element([-x/2, x/2, yvertex-focus, y/2, -z/2, z/2], 1.0, [0, 0, 0])
-a.rotate(numpy.pi/64, [0, 1, 0], [0, yvertex, 0.0], [-1.5, 1.5, -1.5, 1.5, -1.5, 1.5])
+#a.rotate(numpy.pi/64, [0, 1, 0], [0, yvertex, 0.0], [-0.5, 0.5, -0.5, 0.5, -2.0, 0])
 
 for y in y_array:
     a.create_analysis_plan([0, 1, 0], y, reflection_count = 1)

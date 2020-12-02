@@ -973,7 +973,23 @@ class Simu:
 
         Creates a diverging source centered at [0, 0, 0] with numerical aperture 0.22 and radius 0.3.
 
+        Raises
+        ------
+        AssertionError
+            If numerical aperture is higher than 0, propagation vector must be aligned with an axis. This
+            function does not create an angle cone for an arbitrary propagation vector.
         '''
+
+
+        if na>0:
+            check_list = [normal[i] == 0 for i in range(3)]
+            check_list.sort()
+            assert check_list[1] #second element is true so we have at least two zeros
+
+        rot_axis = numpy.subtract([1, 1, 1], normal)
+        na_mesh = numpy.linspace(-na, na, angles)
+        x_na_mesh, y_na_mesh = numpy.meshgrid(na_mesh, na_mesh)
+
         xc, yc, zc = c
         x = numpy.arange(xc-r, xc+self.res, self.res)
         y = numpy.arange(yc-r, yc+self.res, self.res)
@@ -1128,6 +1144,7 @@ class Simu:
         .. math:: 2pp * (Z-  Z0) = (Y-Y0)^{2} - (X-X0)^{2}
 
         '''
+
         def assign(pos):
             xpos, ypos, zpos = pos
             ind = self.pos_to_grid([xpos, ypos, zpos])
@@ -1138,7 +1155,7 @@ class Simu:
         ymax = y0 + 0.5*th; ymin = y0 - 0.5*th
         xmax = x0 + 0.5*wid; xmin = x0 - 0.5*wid
         zmax = z0; zmin = z0 - (1/2*pp)*(max(abs(ymax-y0), abs(ymin-y0))**2+max(abs(xmax-x0), abs(xmin-x0))**2)
-        
+
         x = numpy.arange(x0, xmax, self.res/self.ss)
         y = numpy.arange(y0, ymax, self.res/self.ss)
         z = numpy.arange(zmin, z0, self.res/self.ss)
