@@ -2,6 +2,9 @@ import numpy
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
+import multiprocessing as multiproc
+
+
 
 
 class photon_list():
@@ -874,7 +877,8 @@ class Simu:
                 photon_list = photon_list.photons
                 title = ''
             
-            #print(f'Unpacking {len(photon_list)} photons.')
+            if '-verbose' in mode:
+                print(f'Unpacking {len(photon_list)} photons.')
             
             phx, phy, phz = list(), list(), list()
             nphx, nphy, nphz = list(), list(), list()
@@ -892,7 +896,7 @@ class Simu:
         for index, photon_list in enumerate(my_photon_lists):
             assert hasattr(photon_list, 'photons')
             unpack_photons(photon_list)
-        
+
 
         if 'all' in mode:
             if xrefl.any(): ax.scatter(xrefl, zrefl, yrefl, c='red', label='Reflective', alpha=0.1)
@@ -914,8 +918,7 @@ class Simu:
        
         ax.set_zlabel('Y') 
         ax.set_zlim(-self.size[1]/2.0, self.size[1]/2.0)
-        
-        plt.legend()
+
         plt.show()
 
 
@@ -1563,6 +1566,9 @@ class Simu:
 
         if not multiprocessing:
             self.prepare_acquisition(1)
+        else:
+            assert isinstance(return_dict, multiproc.managers.DictProxy)
+
 
         assert len(self.photons)>run_index
 

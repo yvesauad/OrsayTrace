@@ -662,46 +662,108 @@ example04.py::
 Multi Processing
 ----------------
 
-In this example, we show how can one use python standard library concurrent.futures
+In this example, we show how can one use python standard library `multiprocessing <https://docs.python.org/3/library/multiprocessing.html#module-multiprocessing/>`_ in order
+to perform simulations with a high number of photons. User must call a few methods in order to enable them. First one is::
 
-Result
-******
+>>> prepare_acquisition(nproc)
+
+Which basically splits your initial photons in *nproc* number of equal divisions. Each one of those subsets will be run in a different process.
+
+.. note:: Calling run function will always call prepare_acquisition object. If no multiprocessing is used, nproc = 1 and photon list is identical to initial photon list.
+
+Second step is to use the *Manager()* object from multiprocessing library. In this example we will use a dict type in order to callback to our main function the results
+from our simulation. An example on how to do it is simply::
+
+>>> manager = multiprocessing.Manager()
+>>> return_dict = manager.dict()
+>>> jobs = []
+>>> for i in numpy.arange(0, nproc)
+>>>     p = multiprocessing.Process(target=a.run, args=(i, True, return_dict))
+>>>     jobs.append(p)
+>>>     p.start()
+
+In this case we created a list called jobs with all our processes and started them all using p.start(). return_dict - our *manager.dict()* is passed as an argument.
+Run function deals with this values copying its the habitual return function in return_dict.
+
+.. note:: Currently run function only supports return_dict from type *multiprocessing.managers.DictProxy*. Please fell free to improve this approach
+    in our `GitHub <https://github.com/yvesauad/OrsayTrace/>`_ repository.
+
+The third part is to call merge_photon_lists using the values retrived by our return dict. In order to wait for results, you can call *join()* before. This way
+you sure process is over and added values are meaningful ones::
+
+>>> for index, proc in enumerate(jobs):
+>>>     proc.join()
+>>>     a.merge_photon_lists(return_dict.values()[index])
+
+Please be carefull to do not call this function several times. There is no way to check if the photon has been already added to the list or not at the moment. Calling
+several times will add repeated photons to your main photon_lists. If user want to see each subset of photon that was ran by an specific process, one can use::
+
+>>> show_elements(return_dict.values()[index], 'all-noplan-verbose')
+
+In which -verbose prints in the terminal the number of photons in each plan. You can see that if you run the same code at the end after merge_photon_lists, your number of photons
+will be the sum of each individual core.
+
+
+Results
+*******
+
+
 
 .. figure:: figures/Example05.png
     :align: center
 
-    *Figure 5.1: Left: Animation of X-Z plane of the beam propagating in Y axis. Beam rotated with respect to X.*
+    *Figure 5.1: Performance using a 24 core Intel Xeon 4214 CPU. 201 angles used in source.*
+
+.. figure:: figures/Example05_02.png
+    :align: center
+
+    *Figure 5.2: Performance using a 4 core Intel i7-8664U CPU. 101 angles used in source. Same simulation
+    was performed for a single core in the Xeon 4214 CPU.*
 
 Code
 ****
 
 example05.py::
 
+
+
     import orsaytrace.trace as ot
     import numpy
-    import concurrent.futures
+    import multiprocessing
     import time
 
-    x, y, z, res = 5, 5, 5, 0.02
-    y_array = numpy.linspace(0, y/4, 201)
-    process = 12
+    x, y, z, res = 5, 5, 5, 0.05
+    z_array = numpy.linspace(-z/4, +z/4, 30)
+    nproc = 4
 
-    start = time.clock()
+    start = time.perf_counter()
 
     if __name__ == "__main__":
-        with concurrent.futures.ProcessPoolExecutor(max_workers = process) as executor:
 
-            a = ot.Simu(x, y, z, res)
+        manager = multiprocessing.Manager()
+        return_dict = manager.dict()
 
-            a.d2_source(0.2, [0, 0, -z/2], [0, 0, 1], 0.0, 1)
+        a = ot.Simu(x, y, z, res)
 
-            for y in y_array:
-                a.create_analysis_plan([0, 0, 1], y)
+        a.d2_source(0.0, [0, 0, -z/4], [0, 0, 1], 0.39, 101)
 
-            future_values = [executor.submit(a.run, i, process) for i in numpy.arange(0, process)]
+        for z in z_array:
+            a.create_analysis_plan([0, 0, 1], z)
 
-            for index, futures in enumerate(future_values):
-                new_photon_list = a.merge_photon_lists(futures.result())
+        a.prepare_acquisition(nproc)
 
-            end = time.clock()
-            print(end - start)
+        jobs = []
+        for i in numpy.arange(0, nproc):
+            p = multiprocessing.Process(target=a.run, args=(i, True, return_dict))
+            jobs.append(p)
+            p.start()
+
+        for index, proc in enumerate(jobs):
+            proc.join()
+            #a.show_elements(return_dict.values()[index], 'all-noplan-verbose')
+            a.merge_photon_lists(return_dict.values()[index])
+
+        #a.show_elements(a.photon_lists, 'all-noplan-verbose')
+
+        end = time.perf_counter()
+        print(end - start)

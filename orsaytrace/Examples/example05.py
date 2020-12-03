@@ -2,11 +2,10 @@ import orsaytrace.trace as ot
 import numpy
 import multiprocessing
 import time
-import os
 
 x, y, z, res = 5, 5, 5, 0.05
 z_array = numpy.linspace(-z/4, +z/4, 30)
-nproc = 1
+nproc = 4
 
 start = time.perf_counter()
 
@@ -32,9 +31,10 @@ if __name__ == "__main__":
 
     for index, proc in enumerate(jobs):
         proc.join()
-        if index==0: a.merge_photon_lists(return_dict.values()[index])
+        #a.show_elements(return_dict.values()[index], 'all-noplan-verbose')
+        a.merge_photon_lists(return_dict.values()[index])
 
-    #a.show_elements(a.photon_lists)
+    #a.show_elements(a.photon_lists, 'all-noplan-verbose')
 
     end = time.perf_counter()
     print(end - start)
