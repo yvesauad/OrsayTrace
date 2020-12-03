@@ -963,26 +963,29 @@ class Simu:
             check_list.sort()
             assert check_list[1] #second element is true so we have at least two zeros
 
-        rot_axis = numpy.subtract([1, 1, 1], normal)
-        rot_vecs = []
-        for i in range(3):
-            if i!=numpy.where(rot_axis==0)[0]:
-                vec = [0, 0, 0]
-                vec[i] = 1
-                rot_vecs.append(vec)
+            rot_axis = numpy.subtract([1, 1, 1], normal)
+            rot_vecs = []
+            for i in range(3):
+                if i!=numpy.where(rot_axis==0)[0]:
+                    vec = [0, 0, 0]
+                    vec[i] = 1
+                    rot_vecs.append(vec)
 
-        rot_vecs = numpy.asarray(rot_vecs)
-        na_mesh = numpy.linspace(-na, na, angles)
+            rot_vecs = numpy.asarray(rot_vecs)
+            na_mesh = numpy.linspace(-na, na, angles)
 
-        all_vecs = numpy.asarray([normal])
-        for xna_vals in na_mesh:
-            for yna_vals in na_mesh:
-                new_vec = numpy.add(
-                    numpy.add(numpy.multiply(rot_vecs[0], xna_vals), numpy.multiply(rot_vecs[1], yna_vals)),
+            all_vecs = numpy.asarray([normal])
+            for xna_vals in na_mesh:
+                for yna_vals in na_mesh:
+                    new_vec = numpy.add(
+                        numpy.add(numpy.multiply(rot_vecs[0], xna_vals), numpy.multiply(rot_vecs[1], yna_vals)),
                     normal)
                 #print(new_vec, vec)
-                if new_vec.tolist() not in all_vecs.tolist():
-                    all_vecs = numpy.append(all_vecs, [new_vec], axis=0)
+                    if new_vec.tolist() not in all_vecs.tolist():
+                        all_vecs = numpy.append(all_vecs, [new_vec], axis=0)
+
+        else:
+            all_vecs = numpy.asarray([normal])
 
         xc, yc, zc = c
         x = numpy.arange(xc-r, xc+self.res, self.res)
@@ -997,7 +1000,7 @@ class Simu:
                     for nax in naper:
                         for nay in naper:
                             normal2 = numpy.add(normal, numpy.multiply([1, 1, 0], [nax, nay, 0]))
-                            print(normal2)
+                            #print(normal2)
                             self.photons = numpy.append(self.photons, photon([xpos, ypos, zc], normal2))
                             self.photons = numpy.append(self.photons, photon([-xpos+2*xc, ypos, zc], normal2))
                             self.photons = numpy.append(self.photons, photon([xpos, -ypos+2*yc, zc], normal2))
