@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     a = ot.Simu(x, y, z, res)
 
-    a.d2_source(0.0, [0, 0, -z/4], [0, 0, 1], 0.39, 3)
+    a.d2_source(0.0, [0, 0, -z/4], [0, 0, 1], 0.39)
 
     for z in z_array:
         a.create_analysis_plan([0, 0, 1], z)

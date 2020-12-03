@@ -919,7 +919,7 @@ class Simu:
         plt.show()
 
 
-    def d2_source(self, r, c=[0, 0, 0], normal=[0, 0, 1], na = 0.0, angles=1):
+    def d2_source(self, r, c=[0, 0, 0], normal=[0, 0, 1], na = 0.0, angles=11):
         '''
         Creates a 2d source along axis z with a numerical aperture
 
@@ -980,9 +980,10 @@ class Simu:
                     new_vec = numpy.add(
                         numpy.add(numpy.multiply(rot_vecs[0], xna_vals), numpy.multiply(rot_vecs[1], yna_vals)),
                     normal)
-                #print(new_vec, vec)
-                    if new_vec.tolist() not in all_vecs.tolist():
+                    if new_vec.tolist() not in all_vecs.tolist() and xna_vals**2+yna_vals**2<=na**2:
                         all_vecs = numpy.append(all_vecs, [new_vec], axis=0)
+
+            print(len(all_vecs))
 
         else:
             all_vecs = numpy.asarray([normal])
@@ -997,14 +998,11 @@ class Simu:
         for xpos in tqdm(x, desc='Source'):
             for ypos in y:
                 if (xpos-xc)**2+(ypos-yc)**2<=r**2:
-                    for nax in naper:
-                        for nay in naper:
-                            normal2 = numpy.add(normal, numpy.multiply([1, 1, 0], [nax, nay, 0]))
-                            #print(normal2)
-                            self.photons = numpy.append(self.photons, photon([xpos, ypos, zc], normal2))
-                            self.photons = numpy.append(self.photons, photon([-xpos+2*xc, ypos, zc], normal2))
-                            self.photons = numpy.append(self.photons, photon([xpos, -ypos+2*yc, zc], normal2))
-                            self.photons = numpy.append(self.photons, photon([-xpos+2*xc, -ypos+2*yc, zc], normal2))
+                    for normal2 in all_vecs:
+                        self.photons = numpy.append(self.photons, photon([xpos, ypos, zc], normal2))
+                        self.photons = numpy.append(self.photons, photon([-xpos+2*xc, ypos, zc], normal2))
+                        self.photons = numpy.append(self.photons, photon([xpos, -ypos+2*yc, zc], normal2))
+                        self.photons = numpy.append(self.photons, photon([-xpos+2*xc, -ypos+2*yc, zc], normal2))
     
     def rotate(self, ang, axis, origin, ROI = None):
         '''
