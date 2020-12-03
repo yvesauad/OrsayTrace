@@ -982,19 +982,16 @@ class Simu:
                     normal)
                     if new_vec.tolist() not in all_vecs.tolist() and xna_vals**2+yna_vals**2<=na**2:
                         all_vecs = numpy.append(all_vecs, [new_vec], axis=0)
-
-            print(len(all_vecs))
-
         else:
             all_vecs = numpy.asarray([normal])
 
         xc, yc, zc = c
         x = numpy.arange(xc-r, xc+self.res, self.res)
         y = numpy.arange(yc-r, yc+self.res, self.res)
+
         if not x.size>0:
             x=[xc]
             y=[yc]
-        naper = numpy.linspace(-na, na, angles)
         for xpos in tqdm(x, desc='Source'):
             for ypos in y:
                 if (xpos-xc)**2+(ypos-yc)**2<=r**2:
@@ -1003,7 +1000,90 @@ class Simu:
                         self.photons = numpy.append(self.photons, photon([-xpos+2*xc, ypos, zc], normal2))
                         self.photons = numpy.append(self.photons, photon([xpos, -ypos+2*yc, zc], normal2))
                         self.photons = numpy.append(self.photons, photon([-xpos+2*xc, -ypos+2*yc, zc], normal2))
-    
+
+    def d2_source_rectangle(self, size, c=[0, 0, 0], normal=[0, 0, 1], na=0.0, angles=11):
+        '''
+        Creates a 2d source along axis z with a numerical aperture
+
+        Parameters
+        ----------
+        r: float
+            Source radius. If 0.0, creates a point source.
+        c: array_like:
+            Source center.
+        normal: array_like
+            Source normal. Photon propagation direction
+        na: float
+            Source numerical aperture along axis *[1, 1, 0]*.
+        angles: int
+            Numerical aperture discretization
+
+        Examples
+        -------
+        >>> d2_source(0.1, [0, 0, 0], [0, 0, 1], na=0.0, angles=1)
+
+        Creates a collimated source with radius 0.1 centered at [0, 0, 0].
+
+        >>> d2_source(0.0, [0, 0, 0], [0, 0, 1], na=0.22, angles=11)
+
+        Creates a point source centered at [0, 0, 0] with numerical aperture 0.22. Angles are discretized by 0.04 (-0.22 to 0.22) in 11 points.
+
+        >>> d2_source(0.3, [0, 0, 0], [0, 0, 1], na=0.22, angles=11)
+
+        Creates a diverging source centered at [0, 0, 0] with numerical aperture 0.22 and radius 0.3.
+
+        Raises
+        ------
+        AssertionError
+            If numerical aperture is higher than 0, propagation vector must be aligned with an axis. This
+            function does not create an angle cone for an arbitrary propagation vector.
+        '''
+
+        if na > 0:
+            check_list = [normal[i] == 0 for i in range(3)]
+            check_list.sort()
+            assert check_list[1]  # second element is true so we have at least two zeros
+
+            rot_axis = numpy.subtract([1, 1, 1], normal)
+            rot_vecs = []
+            for i in range(3):
+                if i != numpy.where(rot_axis == 0)[0]:
+                    vec = [0, 0, 0]
+                    vec[i] = 1
+                    rot_vecs.append(vec)
+
+            rot_vecs = numpy.asarray(rot_vecs)
+            na_mesh = numpy.linspace(-na, na, angles)
+
+            all_vecs = numpy.asarray([normal])
+            for xna_vals in na_mesh:
+                for yna_vals in na_mesh:
+                    new_vec = numpy.add(
+                        numpy.add(numpy.multiply(rot_vecs[0], xna_vals), numpy.multiply(rot_vecs[1], yna_vals)),
+                        normal)
+                    if new_vec.tolist() not in all_vecs.tolist() and xna_vals ** 2 + yna_vals ** 2 <= na ** 2:
+                        all_vecs = numpy.append(all_vecs, [new_vec], axis=0)
+        else:
+            all_vecs = numpy.asarray([normal])
+
+        assert len(size==2)
+        xlen, ylen = size
+        assert xlen>0 and ylen>0
+
+        xc, yc, zc = c
+        x = numpy.arange(xc - xlen/2., xc + self.res, self.res)
+        y = numpy.arange(yc - ylen/2., yc + self.res, self.res)
+
+        for xpos in tqdm(x, desc='Source'):
+            for ypos in y:
+                for normal2 in all_vecs:
+                    self.photons = numpy.append(self.photons, photon([xpos, ypos, zc], normal2))
+                    self.photons = numpy.append(self.photons, photon([-xpos + 2 * xc, ypos, zc], normal2))
+                    self.photons = numpy.append(self.photons, photon([xpos, -ypos + 2 * yc, zc], normal2))
+                    self.photons = numpy.append(self.photons, photon([-xpos + 2 * xc, -ypos + 2 * yc, zc], normal2))
+
+    #def create_fiber_bundle(self):
+
     def rotate(self, ang, axis, origin, ROI = None):
         '''
         Rotate a selected ROI in a given direction and origin. This function only rotates grid points that have index of refraction different of 1.

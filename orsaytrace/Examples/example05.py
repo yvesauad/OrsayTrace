@@ -1,8 +1,8 @@
 import orsaytrace.trace as ot
 import numpy
-#import concurrent.futures
 import multiprocessing
 import time
+import os
 
 x, y, z, res = 5, 5, 5, 0.05
 z_array = numpy.linspace(-z/4, +z/4, 30)
@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     a = ot.Simu(x, y, z, res)
 
-    a.d2_source(0.0, [0, 0, -z/4], [0, 0, 1], 0.39)
+    a.d2_source(0.0, [0, 0, -z/4], [0, 0, 1], 0.39, 101)
 
     for z in z_array:
         a.create_analysis_plan([0, 0, 1], z)
