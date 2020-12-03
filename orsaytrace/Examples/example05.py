@@ -6,7 +6,7 @@ import time
 
 x, y, z, res = 5, 5, 5, 0.05
 z_array = numpy.linspace(-z/4, +z/4, 30)
-nproc = 4
+nproc = 1
 
 start = time.perf_counter()
 
@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     a = ot.Simu(x, y, z, res)
 
-    a.d2_source(0.0, [0, 0, -z/4], [0, 0, 1], 0.39, 31)
+    a.d2_source(0.0, [0, 0, -z/4], [0, 0, 1], 0.39, 3)
 
     for z in z_array:
         a.create_analysis_plan([0, 0, 1], z)
