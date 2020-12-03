@@ -1021,20 +1021,6 @@ class Simu:
         angles: int
             Numerical aperture discretization
 
-        Examples
-        -------
-        >>> d2_source(0.1, [0, 0, 0], [0, 0, 1], na=0.0, angles=1)
-
-        Creates a collimated source with radius 0.1 centered at [0, 0, 0].
-
-        >>> d2_source(0.0, [0, 0, 0], [0, 0, 1], na=0.22, angles=11)
-
-        Creates a point source centered at [0, 0, 0] with numerical aperture 0.22. Angles are discretized by 0.04 (-0.22 to 0.22) in 11 points.
-
-        >>> d2_source(0.3, [0, 0, 0], [0, 0, 1], na=0.22, angles=11)
-
-        Creates a diverging source centered at [0, 0, 0] with numerical aperture 0.22 and radius 0.3.
-
         Raises
         ------
         AssertionError
@@ -1069,7 +1055,7 @@ class Simu:
         else:
             all_vecs = numpy.asarray([normal])
 
-        assert len(size==2)
+        assert len(size)==2
         xlen, ylen = size
         assert xlen>0 and ylen>0
 
@@ -1085,7 +1071,16 @@ class Simu:
                     self.photons = numpy.append(self.photons, photon([xpos, -ypos + 2 * yc, zc], normal2))
                     self.photons = numpy.append(self.photons, photon([-xpos + 2 * xc, -ypos + 2 * yc, zc], normal2))
 
-    #def create_fiber_bundle(self):
+    def create_chessboard(self, ts, center, mesh, normal=[0, 0, 1]):
+        assert type(mesh)==int
+        xc, yc, zc = center
+        unit_size = ts / mesh
+        x = numpy.linspace(xc-ts/2.+unit_size/2., xc+ts/2.-unit_size/2., mesh)
+        y = numpy.linspace(yc - ts / 2. + unit_size / 2., yc + ts / 2. - unit_size / 2., mesh)
+        for xi, xpos in enumerate(x):
+            for yi, ypos in enumerate(y):
+                if not (xi+yi)%2:
+                    self.d2_source_rectangle([unit_size, unit_size], [xpos, ypos, zc], normal, na=0.0, angles=11)
 
     def rotate(self, ang, axis, origin, ROI = None):
         '''

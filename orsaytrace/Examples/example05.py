@@ -3,19 +3,17 @@ import numpy
 import multiprocessing
 import time
 
-x, y, z, res = 5, 5, 5, 0.05
-z_array = numpy.linspace(-z/4, +z/4, 30)
-angles = 5
-
-start = time.perf_counter()
-
 for nproc in [1, 2, 4, 8, 12]:
-
     if __name__ == "__main__":
+
+        x, y, z, res = 5, 5, 5, 0.05
+        z_array = numpy.linspace(-z / 4, +z / 4, 30)
+        angles = 121
+
+        start = time.perf_counter()
 
         manager = multiprocessing.Manager()
         return_dict = manager.dict()
-
         a = ot.Simu(x, y, z, res)
 
         a.d2_source(0.0, [0, 0, -z/4], [0, 0, 1], 0.39, angles)
@@ -33,10 +31,7 @@ for nproc in [1, 2, 4, 8, 12]:
 
         for index, proc in enumerate(jobs):
             proc.join()
-            #a.show_elements(return_dict.values()[index], 'all-noplan-verbose')
             a.merge_photon_lists(return_dict.values()[index])
-
-        #a.show_elements(a.photon_lists, 'all-noplan-verbose')
 
         end = time.perf_counter()
 
