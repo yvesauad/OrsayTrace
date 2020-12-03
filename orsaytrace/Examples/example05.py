@@ -8,7 +8,7 @@ for nproc in [1, 2, 4, 8, 12]:
 
         x, y, z, res = 5, 5, 5, 0.05
         z_array = numpy.linspace(-z / 4, +z / 4, 30)
-        angles = 121
+        angles = 2
 
         start = time.perf_counter()
 
