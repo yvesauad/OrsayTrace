@@ -1606,11 +1606,7 @@ class Simu:
         '''
         for index, photon_list in enumerate(my_photon_lists):
             for photon in photon_list.photons:
-                if photon not in self.photon_lists[index].photons:
-                    self.photon_lists[index].append_photon(photon)
-                else:
-                    #This does not work using the return dict. It is very strange that we have different objects
-                    print('***WARNING***: Duplicating photon in the list. Photon will not be added.')
+                self.photon_lists[index].append_photon(photon)
         return self.photon_lists
 
     def reset_photons(self):

@@ -5,38 +5,46 @@ import time
 
 x, y, z, res = 5, 5, 5, 0.05
 z_array = numpy.linspace(-z/4, +z/4, 30)
-nproc = 4
+angles = 5
 
 start = time.perf_counter()
 
-if __name__ == "__main__":
+for nproc in [1, 2, 4, 8, 12]:
 
-    manager = multiprocessing.Manager()
-    return_dict = manager.dict()
+    if __name__ == "__main__":
 
-    a = ot.Simu(x, y, z, res)
+        manager = multiprocessing.Manager()
+        return_dict = manager.dict()
 
-    a.d2_source(0.0, [0, 0, -z/4], [0, 0, 1], 0.39, 101)
+        a = ot.Simu(x, y, z, res)
 
-    for z in z_array:
-        a.create_analysis_plan([0, 0, 1], z)
+        a.d2_source(0.0, [0, 0, -z/4], [0, 0, 1], 0.39, angles)
 
-    a.prepare_acquisition(nproc)
+        for z in z_array:
+            a.create_analysis_plan([0, 0, 1], z)
 
-    jobs = []
-    for i in numpy.arange(0, nproc):
-        p = multiprocessing.Process(target=a.run, args=(i, True, return_dict))
-        jobs.append(p)
-        p.start()
+        a.prepare_acquisition(nproc)
 
-    for index, proc in enumerate(jobs):
-        proc.join()
-        #a.show_elements(return_dict.values()[index], 'all-noplan-verbose')
-        a.merge_photon_lists(return_dict.values()[index])
+        jobs = []
+        for i in numpy.arange(0, nproc):
+            p = multiprocessing.Process(target=a.run, args=(i, True, return_dict))
+            jobs.append(p)
+            p.start()
 
-    #a.show_elements(a.photon_lists, 'all-noplan-verbose')
+        for index, proc in enumerate(jobs):
+            proc.join()
+            #a.show_elements(return_dict.values()[index], 'all-noplan-verbose')
+            a.merge_photon_lists(return_dict.values()[index])
 
-    end = time.perf_counter()
-    print(end - start)
+        #a.show_elements(a.photon_lists, 'all-noplan-verbose')
+
+        end = time.perf_counter()
+
+        f = open('mp.txt', 'a+')
+        f.write(str(angles) + '_' + str(nproc) + '_' + str(end - start)+ '\n')
+        f.close()
+
+
+
 
 
