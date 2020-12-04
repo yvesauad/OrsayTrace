@@ -1175,7 +1175,7 @@ class Simu:
                     self.photons = numpy.append(self.photons, photon([xpos, -ypos + 2 * yc, zc], normal2))
                     self.photons = numpy.append(self.photons, photon([-xpos + 2 * xc, -ypos + 2 * yc, zc], normal2))
 
-    def create_chessboard(self, ts, center, mesh, normal=[0, 0, 1]):
+    def create_chessboard(self, ts, center, mesh, normal=[0, 0, 1], na=0.0, angles=11):
         assert type(mesh)==int
         xc, yc, zc = center
         unit_size = ts / mesh
@@ -1184,7 +1184,18 @@ class Simu:
         for xi, xpos in enumerate(x):
             for yi, ypos in enumerate(y):
                 if not (xi+yi)%2:
-                    self.d2_source_rectangle([unit_size, unit_size], [xpos, ypos, zc], normal, na=0.0, angles=11)
+                    self.d2_source_rectangle([unit_size, unit_size], [xpos, ypos, zc], normal, na, angles)
+
+    def create_fiberbundle(self, tr, center, mesh, normal=[0, 0, 1], na=0.0, angles=11):
+        assert type(mesh)==int
+        xc, yc, zc = center
+        unit_radius = tr / mesh
+        x = numpy.linspace(xc-tr+unit_radius, xc+tr-unit_radius, mesh)
+        y = numpy.linspace(yc-tr+unit_radius, yc + tr- unit_radius, mesh)
+        for xi, xpos in enumerate(x):
+            for yi, ypos in enumerate(y):
+                if ((xpos-xc)**2+(ypos-yc)**2<=(tr-unit_radius)**2):
+                    self.d2_source(unit_radius, [xpos, ypos, zc], normal, na, angles)
 
     def rotate(self, ang, axis, origin, ROI = None):
         '''
