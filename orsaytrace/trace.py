@@ -35,21 +35,23 @@ class photon_list():
             A photon coming from photon class.
 
         '''
+        do_append = True
         if self.condition_dict:
             for cond, val in self.condition_dict.items():
                 for key, pval in photon.__dict__.items():
                     if cond==key:
                         if cond=='pos' and type(val) is tuple:
                             dist = numpy.linalg.norm(val[0]-pval)
-                            if val[1][0]<dist<val[1][1]:
-                                self.photons = numpy.append(self.photons, photon)
+                            if not (val[1][0]<=dist and dist<=val[1][1]):
+                                do_append = False
                         else:
                             if type(val) is tuple:
-                                if pval>=val[0] and pval<=val[1]:
-                                    self.photons = numpy.append(self.photons, photon)
+                                if not (val[0]<=pval and pval<=val[1]):
+                                    do_append = False
                             else:
-                                if pval>=val:
-                                    self.photons = numpy.append(self.photons, photon)
+                                if not pval>=val:
+                                    do_append = False
+            if do_append: self.photons = numpy.append(self.photons, photon)
         else:
             self.photons = numpy.append(self.photons, photon)
 
@@ -352,7 +354,8 @@ class photon():
         self.reflection_count = 0
         self.init = dict()
         self.init['pos'] = pos
-        self.init['normal'] = normal
+        self.init['normal'] = normal / numpy.linalg.norm(normal)
+        self.init['intensity'] = intensity
 
     def set_attr(self, values):
         '''
@@ -776,22 +779,94 @@ class Simu:
             self.normal[1][indexes[0], indexes[1], indexes[2]], 
             self.normal[2][indexes[0], indexes[1], indexes[2]]], self.index[indexes[0], indexes[1], indexes[2]])
 
-
-    def show_photons2D(self, my_photon_lists, plan='xy'):
+    def show_single_photons2D(self, my_photon_lists, mode='all', binning=21):
         '''
         See Also
         --------
 
         Deprecated function. Please access photon_list properties manually.
         '''
-        if 'xz' not in plan and 'xz' not in plan and 'xy' not in plan:
-            raise Exception('Please pick either xy, xz or yz as plan.')
+
+        assert len(my_photon_lists) == 1
+
+        def unpack_2d_photons(photon_list):
+
+            if '-verbose' in mode:
+                print(f'Unpacking {len(photon_list.photons)} photons.')
+
+            phx, phy, phz = list(), list(), list()
+            nphx, nphy, nphz = list(), list(), list()
+            intensity = list()
+
+            if photon_list.normal.tolist() == [0, 0, 1]:
+                plan = 'xy'
+                axes.set_xlabel('X')
+                axes.set_ylabel('Y')
+            elif photon_list.normal.tolist() == [0, 1, 0]:
+                plan = 'xz'
+                axes.set_xlabel('X')
+                axes.set_ylabel('Z')
+            elif photon_list.normal.tolist() == [1, 0, 0]:
+                plan = 'yz'
+                axes.set_xlabel('Y')
+                axes.set_ylabel('Z')
+
+            for photon in photon_list.photons:
+                ipos = (photon.pos)
+                nor = photon.normal
+                phx.append(ipos[0]);
+                phy.append(ipos[1]);
+                phz.append(ipos[2])
+                nphx.append(nor[0]);
+                nphy.append(nor[1]);
+                nphz.append(nor[2])
+                intensity.append(photon.intensity)
+
+            if plan == 'xy': axes.hist2d(phx, phy, binning, weights=intensity)
+            if plan == 'xz': axes.hist2d(phx, phz, binning, weights=intensity)
+            if plan == 'yz': axes.hist2d(phy, phz, binning, weights=intensity)
+
+            axes.set_title(plan + ' @ ' + str(photon_list.value))
+
+        fig, axes = plt.subplots(nrows=1, ncols=len(my_photon_lists), sharex=False, sharey=False)
+
+        assert hasattr(my_photon_lists[00], 'photons')
+        unpack_2d_photons(my_photon_lists[0])
+
+        plt.show()
+
+
+    def show_photons2D(self, my_photon_lists, mode='all', binning=21):
+        '''
+        See Also
+        --------
+
+        Deprecated function. Please access photon_list properties manually.
+        '''
+
+        assert len(my_photon_lists)>1
         
         def unpack_2d_photons(photon_list, sindex):
+
+            if '-verbose' in mode:
+                print(f'Unpacking {len(photon_list.photons)} photons.')
             
             phx, phy, phz = list(), list(), list()
             nphx, nphy, nphz = list(), list(), list()
             intensity = list()
+
+            if photon_list.normal.tolist()==[0, 0, 1]:
+                plan='xy'
+                axes[sindex].set_xlabel('X')
+                axes[sindex].set_ylabel('Y')
+            elif photon_list.normal.tolist()==[0, 1, 0]:
+                plan='xz'
+                axes[sindex].set_xlabel('X')
+                axes[sindex].set_ylabel('Z')
+            elif photon_list.normal.tolist()==[1, 0, 0]:
+                plan='yz'
+                axes[sindex].set_xlabel('Y')
+                axes[sindex].set_ylabel('Z')
 
             for photon in photon_list.photons:
                 ipos = (photon.pos)
@@ -800,11 +875,11 @@ class Simu:
                 nphx.append(nor[0]); nphy.append(nor[1]); nphz.append(nor[2])
                 intensity.append(photon.intensity)
             
-            if plan=='xy': axes[sindex].hist2d(phx, phy, 21, weights = intensity)
-            if plan=='xz': axes[sindex].hist2d(phx, phz, 21, weights = intensity)
-            if plan=='yz': axes[sindex].hist2d(phy, phz, 21, weights = intensity)
+            if plan=='xy': axes[sindex].hist2d(phx, phy, binning, weights = intensity)
+            if plan=='xz': axes[sindex].hist2d(phx, phz, binning, weights = intensity)
+            if plan=='yz': axes[sindex].hist2d(phy, phz, binning, weights = intensity)
 
-            axes[sindex].set_title(str(photon_list.value))
+            axes[sindex].set_title(plan + ' @ ' + str(photon_list.value))
 
         fig, axes = plt.subplots(nrows=1, ncols=len(my_photon_lists), sharex=False, sharey=False)
             
@@ -852,7 +927,13 @@ class Simu:
             if xrefr.any(): ax.scatter(xrefr, zrefr, yrefr, c='blue', label='Refractive')
             if '-noplan' not in mode:
                 for index, photon_list in enumerate(self.photon_lists):
-                    ax.plot_surface(self.x, (photon_list.value-photon_list.normal[0]*self.x-photon_list.normal[1]*self.y)/photon_list.normal[2], self.y, color='yellow', alpha=0.2)
+                    if photon_list.normal[2]>0:
+                        ax.plot_surface(self.x, (photon_list.value-photon_list.normal[0]*self.x-photon_list.normal[1]*self.y)/photon_list.normal[2], self.y, color='yellow', alpha=0.2)
+                    elif photon_list.normal[1]>0:
+                        ax.plot_surface(self.x, self.y, (photon_list.value-photon_list.normal[0]*self.x-photon_list.normal[2]*self.y)/photon_list.normal[1], color='yellow', alpha=0.2)
+                    elif photon_list.normal[0]>0:
+                        ax.plot_surface((photon_list.value-photon_list.normal[2]*self.x-photon_list.normal[1]*self.y)/photon_list.normal[0], self.x, self.y, color='yellow', alpha=0.2)
+
 
         ax.set_xlabel('X')
         ax.set_xlim(-self.size[0]/2.0, self.size[0]/2.0)
@@ -986,12 +1067,10 @@ class Simu:
 
             rot_axis = numpy.subtract([1, 1, 1], normal)
             rot_vecs = []
-            for i in range(3):
-                if i != numpy.where(rot_axis == 0)[0]:
-                    vec = [0, 0, 0]
-                    vec[i] = 1
-                    rot_vecs.append(vec)
-
+            for i in numpy.where(rot_axis == 1)[0]:
+                vec = [0, 0, 0]
+                vec[i] = 1
+                rot_vecs.append(vec)
             rot_vecs = numpy.asarray(rot_vecs)
             na_mesh = numpy.linspace(-na, na, angles)
 
@@ -1007,9 +1086,9 @@ class Simu:
             all_vecs = numpy.asarray([normal])
 
         xc, yc, zc = c
-        x = numpy.arange(xc - r, xc + self.res, self.res)
-        y = numpy.arange(yc - r, yc + self.res, self.res)
-        z = numpy.arange(zc - r, zc + self.res, self.res)
+        x = numpy.arange(xc - r, xc + self.res/2., self.res)
+        y = numpy.arange(yc - r, yc + self.res/2., self.res)
+        z = numpy.arange(zc - r, zc + self.res/2., self.res)
 
         if 'x' not in plan:
             x = [xc]
@@ -1099,8 +1178,8 @@ class Simu:
 
 
         xc, yc, zc = c
-        x = numpy.arange(xc-r, xc+self.res, self.res)
-        y = numpy.arange(yc-r, yc+self.res, self.res)
+        x = numpy.arange(xc-r, xc+self.res/2., self.res)
+        y = numpy.arange(yc-r, yc+self.res/2., self.res)
         if not x.size>0:
             x=[xc]
             y=[yc]
@@ -1169,8 +1248,8 @@ class Simu:
         assert xlen>0 and ylen>0
 
         xc, yc, zc = c
-        x = numpy.arange(xc - xlen/2., xc + self.res, self.res)
-        y = numpy.arange(yc - ylen/2., yc + self.res, self.res)
+        x = numpy.arange(xc - xlen/2., xc+self.res/2., self.res)
+        y = numpy.arange(yc - ylen/2., yc+self.res/2., self.res)
 
         for xpos in tqdm(x, desc='Source'):
             for ypos in y:
