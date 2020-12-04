@@ -971,7 +971,13 @@ class Simu:
             function does not create an angle cone for an arbitrary propagation vector.
         '''
 
-        assert 'xy' in plan or 'xz' in plan or 'yz' in plan
+        def create_photon(pos, norm):
+            xp, yp, zp = pos
+            now_pos = (numpy.multiply([1, 0, 0], xp) + numpy.multiply([0, 1, 0], yp) + numpy.multiply([0, 0, 1], zp))
+            self.photons = numpy.append(self.photons, photon(now_pos, norm))
+
+
+        assert 'xy' in plan or 'xz' in plan or 'yz' in plan or 'point' in plan
 
         if na > 0:
             check_list = [normal[i] == 0 for i in range(3)]
@@ -1005,27 +1011,26 @@ class Simu:
         y = numpy.arange(yc - r, yc + self.res, self.res)
         z = numpy.arange(zc - r, zc + self.res, self.res)
 
-        if plan == 'xy':
-            vec1 = [1, 0, 0]
-            vec2 = [0, 1, 0]
-            vec3 = [0, 0, 1]
-        if plan == 'xz':
-            vec1 = [1, 0, 0]
-            vec2 = [0, 0, 0]
-            vec3 = [0, 0, 1]
-
-        if not x.size > 0:
+        if 'x' not in plan:
             x = [xc]
+        if 'y' not in plan:
             y = [yc]
+        if 'z' not in plan:
+            z = [zc]
+
         for xpos in tqdm(x, desc='Source'):
             for ypos in y:
-                if (xpos - xc) ** 2 + (ypos - yc) ** 2 <= r ** 2:
-                    for normal2 in all_vecs:
-                        now_pos = (numpy.multiply(vec1, xpos) + numpy.multiply(vec2, ypos) + numpy.multiply(vec3, zc))
-                        self.photons = numpy.append(self.photons, photon(now_pos, normal2))
-                        self.photons = numpy.append(self.photons, photon([-xpos + 2 * xc, ypos, zc], normal2))
-                        self.photons = numpy.append(self.photons, photon([xpos, -ypos + 2 * yc, zc], normal2))
-                        self.photons = numpy.append(self.photons, photon([-xpos + 2 * xc, -ypos + 2 * yc, zc], normal2))
+                for zpos in z:
+                    if (xpos - xc) ** 2 + (ypos - yc) ** 2 + (zpos - zc)**2 <= r ** 2:
+                        for normal2 in all_vecs:
+                            create_photon([xpos, ypos, zpos], normal2)
+                            if 'x' in plan: create_photon([-xpos+2*xc, ypos, zpos], normal2)
+                            if 'y' in plan: create_photon([xpos, -ypos+2*yc, zpos], normal2)
+                            if 'z' in plan: create_photon([xpos, ypos, -zpos+2*zc], normal2)
+
+                            if 'x' in plan and 'y' in plan: create_photon([-xpos+2*xc, -ypos+2*yc, zpos], normal2)
+                            if 'x' in plan and 'z' in plan: create_photon([-xpos + 2 * xc, ypos, -zpos+2*zc], normal2)
+                            if 'y' in plan and 'z' in plan: create_photon([xpos, -ypos+2*yc, -zpos + 2 * zc], normal2)
 
     def d2_source(self, r, c=[0, 0, 0], normal=[0, 0, 1], na = 0.0, angles=11):
         '''
