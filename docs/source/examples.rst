@@ -760,7 +760,7 @@ Another factor that prevents is the small simulation size, which sometimes means
 reach all processes running because the first ones were already finished.
 
 In order to understand better the impact of multiprocessing library, we have performed a simulation with a
-single plan, a point source spawning :math:`101` plans over a very narrow numerical aperture :math:`0.001`
+single plan, a point source spawning :math:`101` plans over a very narrow numerical aperture :math:`0.0005`
 in a cell size of :math:`(1, 1, 320)`. Resolution was set to :math:`0.02` and total number of photons
 were :math:`31320`.
 
