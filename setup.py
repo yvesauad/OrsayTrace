@@ -1,11 +1,5 @@
 from distutils.core import setup
 
-proj_urls = {
-    'Bug Tracker': 'https://github.com/hyperspy/hyperspy/issues',
-    'Documentation': 'https://orsaytrace.readthedocs.io/en/latest/index.html',
-    'Source Code': 'https://github.com/yvesauad/orsaytrace',
-}
-
 setup(
         name='orsaytrace',
         packages = ['orsaytrace'],
@@ -17,7 +11,10 @@ setup(
         author = 'Yves Auad',
         author_email = 'yves.maia-auad@universite-paris-saclay.fr',
         url = 'https://github.com/yvesauad/OrsayTrace',
-        project_urls = proj_urls,
+        project_urls = {
+    'Documentation': 'https://orsaytrace.readthedocs.io/en/latest/index.html',
+    'Source Code': 'https://github.com/yvesauad/orsaytrace',
+},
         download_url = 'https://github.com/yvesauad/OrsayTrace/archive/v1.1.0.tar.gz',
         keywords = ['optics', 'ray', 'tracing'],
         install_requires = [
