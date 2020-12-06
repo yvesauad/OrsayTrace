@@ -286,7 +286,7 @@ Exploring Rotation
 ------------------
 
 This simple example shows a little more in-depth how one can visualize and explore some flexibility features of
-this module. In order to rotate all elements with :math:`n_{refr} != 1.0`, One can use the rotation method::
+this module. In order to rotate all elements with :math:`n_{refr} \neq 1.0`, One can use the rotation method::
 
 >>> a.rotate(numpy.arcsin(-na), [0, 1, 0], [0, 0, zlens])
 
