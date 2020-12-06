@@ -11,11 +11,10 @@
 .. |rtd| image:: https://readthedocs.org/projects/orsaytrace/badge/?version=latest
 .. _rtd: https://readthedocs.org/projects/orsaytrace/?badge=latest
 
-
 OrsayTrace
 ----------
 
-Orsaytrace is an open source python library for flexible optical simulations in :math:`3D` dimensions.
+Orsaytrace is an open source python library for flexible optical simulations in 3D dimensions.
 
 Orsaytrace makes it easy to add elements or transformations sequentially. Multiple shapes can be created using
 building blocks such as spheres, prisms, parabolas and spatial transformations like rotations or translations.

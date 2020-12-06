@@ -1,21 +1,23 @@
-from distutils.core import setup
+#from distutils.core import setup
 from setuptools import setup
+
+proj_urls = {
+                'Documentation': 'https://orsaytrace.readthedocs.io/en/latest/index.html',
+                'Source Code': 'https://github.com/yvesauad/orsaytrace'
+            }
 
 setup(
         name='orsaytrace',
         packages = ['orsaytrace'],
-        version = '1.1.3.1',
+        version = '1.1.3.7',
         license = 'MIT',
         description = 'Flexible ray tracing for optics',
         long_description = open('README.rst').read(),
-        long_description_content_type = 'text/markdown',
+        #long_description_content_type = 'text/markdown',
         author = 'Yves Auad',
         author_email = 'yves.maia-auad@universite-paris-saclay.fr',
         url = 'https://github.com/yvesauad/OrsayTrace',
-        project_urls = {
-            'Documentation': 'https://orsaytrace.readthedocs.io/en/latest/index.html',
-            'Source Code': 'https://github.com/yvesauad/orsaytrace'
-        },
+        project_urls = proj_urls,
         download_url = 'https://github.com/yvesauad/OrsayTrace/archive/v1.1.3.tar.gz',
         keywords = ['optics', 'ray', 'tracing'],
         install_requires = [
