@@ -23,7 +23,7 @@ copyright = '2020, Yves Auad'
 author = 'Yves Auad'
 
 # The full version, including alpha/beta/rc tags
-release = 'v1.0.13'
+release = 'v1.1'
 
 
 # -- General configuration ---------------------------------------------------

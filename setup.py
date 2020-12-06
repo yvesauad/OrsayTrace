@@ -1,10 +1,10 @@
 from distutils.core import setup
-import setuptools
+from setuptools import setup
 
 setup(
         name='orsaytrace',
         packages = ['orsaytrace'],
-        version = '1.1.3',
+        version = '1.1.3.1',
         license = 'MIT',
         description = 'Flexible ray tracing for optics',
         long_description = open('README.rst').read(),
