@@ -1,0 +1,5 @@
+include README.rst
+include setup.cfg
+include setup.py
+include orsaytrace\__init__.py
+include orsaytrace\trace.py
