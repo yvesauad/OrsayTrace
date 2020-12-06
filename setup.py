@@ -1,9 +1,10 @@
 from distutils.core import setup
+import setuptools
 
 setup(
         name='orsaytrace',
         packages = ['orsaytrace'],
-        version = '1.1.1',
+        version = '1.1.3',
         license = 'MIT',
         description = 'Flexible ray tracing for optics',
         long_description = open('README.rst').read(),
@@ -15,7 +16,7 @@ setup(
             'Documentation': 'https://orsaytrace.readthedocs.io/en/latest/index.html',
             'Source Code': 'https://github.com/yvesauad/orsaytrace'
         },
-        download_url = 'https://github.com/yvesauad/OrsayTrace/archive/v1.1.1.tar.gz',
+        download_url = 'https://github.com/yvesauad/OrsayTrace/archive/v1.1.3.tar.gz',
         keywords = ['optics', 'ray', 'tracing'],
         install_requires = [
             'numpy',
