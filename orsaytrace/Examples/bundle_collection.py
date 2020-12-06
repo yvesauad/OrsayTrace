@@ -61,12 +61,15 @@ for tr in [4.0, 3.0, 2.0, 1.0, 0.5, 0.25, 0.125]:
         plt.savefig('map_' + str(tr) + '_' + str(mesh) + '.png')
         plt.clf()
 
-        fig, axes = plt.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
         if it==1:
-            axes.hist2d(x_new_list[0], z_new_list[0], bins=hist-1, range=[[min_x, max_x], [min_z, max_z]])
+            fig, axes = plt.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
+            plt.hist2d(x_new_list[0], z_new_list[0], bins=hist-1, range=[[min_x, max_x], [min_z, max_z]])
+            plt.colorbar()
             plt.savefig(str(tr) + '_' + str(mesh) + '.png')
         else:
             for i in range(it):
+                fig, axes = plt.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
                 #plt.clf()
-                axes.hist2d(x_new_list[i], z_new_list[i], bins=hist-1, range=[[min_x, max_x], [min_z, max_z]])
+                plt.hist2d(x_new_list[i], z_new_list[i], bins=hist-1, range=[[min_x, max_x], [min_z, max_z]])
+                plt.colorbar()
                 plt.savefig(str(tr) + '_' + str(mesh) + '_' + str(i) + '.png')

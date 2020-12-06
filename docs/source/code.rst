@@ -1,4 +1,4 @@
-Auto Generated Documentation
+Full API Documentation
 ============================
 
 Functions of Trace Module

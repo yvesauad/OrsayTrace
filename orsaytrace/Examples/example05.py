@@ -38,8 +38,3 @@ for nproc in [1, 2, 4, 8, 12]:
         f = open('mp.txt', 'a+')
         f.write(str(angles) + '_' + str(nproc) + '_' + str(end - start)+ '\n')
         f.close()
-
-
-
-
-

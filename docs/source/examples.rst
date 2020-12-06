@@ -217,7 +217,7 @@ Again we use a convenient functions in class photon_list called::
 Which returns a :math:`3` dimensional array of the standard deviation of position values for each given plane.
 We expect that standard deviation increases with the propagation of a diverging beam; stays constant for a
 collimated beam and reduces for a converging beam. As we change lens :math:`Z` position, we will match source
-and lens numerical aperture at a given point, producing a collimated beam with approximately no divergence.
+and lens numerical aperture at a given point, producing a collimated beam with almost no divergence.
 
 .. figure:: figures/Example02.png
     :align: center
@@ -292,11 +292,12 @@ this module. In order to rotate all elements with :math:`n_{refr} != 1.0`, One c
 
 Rotation arguments can be viewed in full documentation, but it will basically rotate along axis :math:`[0, 1, 0]`
 an amount of :math:`\theta = -arcsin(na)` centered at :math:`[0, 0, zlens]`, which is the center of flat surface
-of the lens. In order to show the flexibility of planes, we create a plan tilted at the same amount using::
+of the lens. In order to show the flexibility of plane construction, we create a  tiled plan tilted at the same
+angle::
 
 >>> a.create_analysis_plan([-na, 0, 1], z)
 
-And finally have used source with different normal vector as well. Do not worry about vector normalization,
+And finally we can use a source with different normal vector as well. Do not worry about vector normalization,
 this is done during photon instantiation::
 
 >>> a.d2_source(r, [0.5, 0.0, -4.5], [-na, 0, 1], 0.0, 1)
@@ -320,29 +321,27 @@ Rotation of all objects can be clearly seen, but a few photons also looks a litt
 because rotation is a tricky transformation in a mesh. You need to rotate both the point and normal which not
 always corresponds to exactly same absolute values due to finite volume of each grid cube.
 
-There is a way of reducing dramatically this problem without the need of increasing too much resolution.
-This is using conditional plans. As *'refraction_count'* and *'reflection_count'* are *photon* attributes, you
-can set conditions on them in order to be appended to plan. Check full documentation for more info.
-To use this feature, one simply:
+A way of reducing dramatically this problem without the need of increasing resolution, is by using conditional
+plans. As *'refraction_count'* and *'reflection_count'* are *photon* attributes, you can pass them as a keyword
+argument. Check full documentation for more info. To use this feature, one simply:
 
 >>> a.create_analysis_plan([-na, 0, 1], z, refraction_count=(1, 2))
 
-This will restrain photons that have suffered a number of refractions :math:`1\leq ct_{rf}\leq 2` and 2, both included.
-Result of this simulation is shown below. Note how plans before the lens have nothing because
-they haven't already found a refractive (or reflective) element.
+This will restrain to photons that have refracted :math:`1\leq ct_{rf}\leq 2`. Result of this simulation is
+shown in Figure 3.2. Note how plans before the lens have no photons because they have not already found
+a refractive (or reflective) element.
 
 .. figure:: figures/Example03_res0-05_other_view_refraction_count.png
     :align: center
 
-    Measurement of a rotated source, lens and planes with a conditional. 7 plans and a resolution of 0.05.
+    Figure 3.2: Measurement of a rotated source, lens and conditional planes. Resolution is 0.05.
 
-Finally, if we hide plans inspection and turn for much more plans, we would see:
+Finally, if we hide plans inspection and turn simulation for much more plans, we would see:
 
 .. figure:: figures/Example03_res0-04_other_view_refraction_count_51_planes.png
     :align: center
 
-    Measurement of a rotated source, lens and planes with a conditional. 7 plans and a resolution of 0.05.
-
+    Figure 3.3: Measurement of a rotated source, lens and conditional planes. Resolution is 0.05.
 
 Code
 ****
@@ -397,29 +396,28 @@ example03.py::
 
 Other Geometries
 ----------------
-In this example, we study how a perfect collimated beam behaves if reflected by a off-axis parabolic mirror.
-The ideia is to construct a parabolic surface and remove its upper part using a rectangular element. This is
-systematically done during the creation of a thin_lens, but not visible to the user.
+In this example, we study how a collimated source behaves when reflected by a off-axis parabolic mirror.
+The idea is to construct a parabolic surface and remove its upper part using a rectangular element.
 
-At the beginning, we define a few constants that are important in order to understand the problem. Focus
-is the distance, in Y direction, of the top of the parabolic surface after material removal to its vertex.
-yvertex is the Y vertex position. Source is at [0, 0, -5], which means source center in z axis is arriving in the
-lower botton part of the mirror.
+At the beginning, we define a few constants that are important in order to understand the problem. *Focus*
+is the distance, in :math:`Y` direction, of the top of the parabolic surface to its vertex. *yvertex* is the
+:math:`Y` vertex position. Source is at :math:`[0, 0, -5]`, which means source center in :math:`Z` axis is
+arriving in the lower bottom part of the mirror.
 
-We have created several plans in Y direction with the condition of a minimal of one reflection::
+We have created several plans in :math:`Y` direction with the condition of a minimal of one reflection::
 
 >>> for y in y_array:
 >>>    a.create_analysis_plan([0, 1, 0], y, reflection_count = 1)
 
-In this example, several built-in function available to photon_list class have been used. New function relative
+In this example, several built-in functions available to *photon_list* class have been used. New functions relative
 to previous examples are::
 
 >>> photon_list.get_average_weighted_inverse()
 >>> photon_list.get_average_weighted_inverse_axis_y([0, -p/2.])
 
-They are very similar functions. The first computes the weighted inverse distance of each photon relative to average photon
-position. Second function computes the weighted inverse distance relative to a given point; in this case, we have
-used point in x-z plan [0, -p/2]. As we know from a parabola, this is its focal point.
+The first computes the weighted inverse distance of each photon relative to average photon position.
+Second function computes the weighted inverse distance relative to a given point; in this case, we have
+used point in :math:`X\times Z` plan :math:`[0, -p/2]`. As we know from a parabola, this is its focal point.
 
 .. note::
     The weight in those functions comes from intensity photon attribute. By default, they are equal to a unity
@@ -429,60 +427,59 @@ used point in x-z plan [0, -p/2]. As we know from a parabola, this is its focal 
 .. figure:: figures/Example04_begin.png
     :align: center
 
-    *Figure 4.1: Simulation starting point using a resolution of 0.05.*
+    Figure 4.1: Simulation starting conditions using a resolution of 0.05.
 
-Figures 4.1 and 4.2 explain our setup. Photons arrive with no divergence and converges to the parabola focal point.
-In order to examine this problem, we will plot position average and standard deviation for X-Z coordinates. We will
-also calculated the inverse of the distance using two reference points, as explained before
+Figures 4.1 explains our simulation initial conditions. Photons arrive with no divergence and converges
+to the parabola focal point. In order to examine this problem, we will plot position average and standard
+deviation for :math:`X \times Z` coordinates. We will also calculate the inverse of the distance using
+two reference points, as explained before.
 
-In practice, first weighted inverse (from average position) is a moving point. It goes along photons center of mass
-and we will see it propagating when we plot the average for X-Z coordinates. Second weighted inverse is a static
-point. We will discuss the meaning of this analyses in results.
+In practice, first weighted inverse (from average position) is a moving point. It goes along photons
+center of mass and we will see it propagating when we plot the average for :math:`X \times Z` coordinates.
+Second weighted inverse is a static point. We will discuss the meaning of it in results.
 
 .. figure:: figures/Example04_end.png
     :align: center
 
-    *Figure 4.2: Simulation end point using a resolution of 0.05.*
+    *igure 4.2: Simulation end point using a resolution of 0.05.
 
 As we will se in results, we have also performed rotation measurements. Rotation method checks
 for active grid point, such as :math:`n_{refr} \neq 1`. It is an expensive method because it does
 not know previous what the user have added to the grid. In this sense, we can perform smarter rotations
-if you understand your problem. In this case, i have done a rotation using the ROI correspondent
+if you understand your problem. In this case, we have done a rotation using the ROI correspondent
 to incident photons.
 
 .. figure:: figures/Example04_rotation.png
     :align: center
 
-    *Figure 4.3: Rotation regions was not perfomed in the whole parabolic mirror.*
-
-
+    Figure 4.3: Rotation regions was not performed in the whole parabolic mirror.
 
 Results
 *******
 
 First simulation was done using a straight mirror, with no tilt :math:`\theta = 0 ^{\circ}`.
-Figure 4.4 shows several expected results. X average (top left) does not change during
-beam propagation, while Z became more and more negative, meaning beam has a reflective
+Figure 4.4 shows several expected results. :math:`X` average (top left) does not change during
+beam propagation, while :math:`Z` became more and more negative, meaning beam has a reflective
 component that faces the initial source. Standard deviation in top center shows we have
-an non-astigmatic source and both X and Z focus at the same point. Top right shows that beam
-has an much more smaller *apparent depth of focus* in Y axis with respect to its focal point
-when compared to propagation axis (not aligned with Y axis).
+an non-astigmatic source and both :math:`X` and :math:`Z` focus at the same point. Top right shows that beam
+has an much more smaller apparent depth of focus in :math:`Y` axis with respect to its focal point
+when compared to propagation axis (not aligned with :math:`Y` axis).
 
 .. figure:: figures/Example04_res0-008.png
     :align: center
 
-    *Figure 4.4: Left: Average position for X-Z. Center: Standard deviation for x-Z. Right: Weighted inverse for center of
-    mass and for parabola focal point.*
+    Figure 4.4: Left: Average position for X-Z. Center: Standard deviation for X-Z. Right: Weighted inverse for center of
+    mass and for parabola focal point.
 
-Figure 4.5 shows snapshots of beam in 3 different Y planes, where the center one is defined by
+Figure 4.5 shows snapshots of beam in :math:`3` different :math:`Y` planes, where the center one is defined by
 the minimum of the standard deviation (focal point). We see focal point corresponds to
-:math:`(x, z) = (0, -p/2)`. We also see that beam propagates somewhat with a elliptical shape.
+:math:`(X, Z) = (0, -p/2)`. We also see that beam propagates somewhat with a elliptical shape.
 
 .. figure:: figures/Example04_res0-008_02.png
     :align: center
 
-    *Figure 4.5: Three distinct snapshots of the beam propagating in Y direction. Position are relative to
-    the black dots shown in previous average figure.*
+    Figure 4.5: Three distinct snapshots of the beam propagating in Y direction. Position are relative to
+    the black dots shown in previous average figure.
 
 In Figure 4.6, we have used animation module present in the standard matplotlib library to produce
 an animated image .gif::
@@ -492,68 +489,70 @@ an animated image .gif::
 .. figure:: figures/Example04_res0.008.gif
     :align: center
 
-    *Figure 4.6: Left: Animation of X-Z plane of the beam propagating in Y axis.*
+    Figure 4.6: Left: Animation of X-Z plane of the beam propagating in Y axis.
 
-In order to check the effect of mirror tilting, we added a :math:`\theta = \frac{\pi}{64} \approx 2.8^{\circ}` with respect to
-the [0, 1, 0] diction, as shown in Figure 4.3. Beam does not cross :math:`(x, z) = (0, -p/2)` simply because rotation changed
-focal point. Using centroid we see weighted inverse does not change much. Source is still non-astigmatic with respect to Y axis.
+In order to check the effect of mirror tilting, we added a :math:`\theta = \frac{\pi}{64} \approx 2.8^{\circ}`
+with respect to the :math:`[0, 1, 0]` direction, as shown in Figure 4.3. Beam does not cross
+:math:`(x, z) = (0, -p/2)` simply because rotation changed focal point. Using centroid we see weighted inverse
+does not change much. Source is still non-astigmatic with respect to :math:`Y` axis.
 
 .. figure:: figures/Example04_res0-01_tilted_pi-64.png
     :align: center
 
-    *Figure 4.7 Left: Left: Average position for X-Z. Center: Standard deviation for x-Z. Right: Weighted inverse for center of
-    mass and for parabola focal point. Beam rotated with respect to Y.*
+    Figure 4.7 Left: Average position for X-Z. Center: Standard deviation for X-Z. Right: Weighted inverse for
+    center of mass and for parabola focal point. Beam rotated with respect to Y.
 
-Snapshots show that beam is propagating in X axis as well, as expected by a rotation in this direction. Center of mass Z propagation
-is pretty much the same.
+Snapshots show that beam is propagating in :math:`X` axis as well, as expected by a rotation in this direction.
+Center of mass :math:`Z` propagation is pretty much the same.
 
 .. figure:: figures/Example04_res0-01_02_tilted_pi-64.png
     :align: center
 
-    *Figure 4.8: Three distinct snapshots of the beam propagating in Y direction. Position are relative to
-    the black dots shown in previous average figure. Beam rotated with respect to Y.*
+    Figure 4.8: Three distinct snapshots of the beam propagating in Y direction. Positions are relative to
+    the black dots shown in previous average figure. Beam rotated with respect to Y.
 
 Finally, we can also export a .gif animation in order to see beam propagation.
 
 .. figure:: figures/Example04_res0-01_pi-64_tilted.gif
     :align: center
 
-    *Figure 4.9: Left: Animation of X-Z plane of the beam propagating in Y axis. Beam rotated with respect to Y.*
+    Figure 4.9: Left: Animation of X-Z plane of the beam propagating in Y axis. Beam rotated with respect to Y.
 
-We can also add a :math:`\theta = \frac{\pi}{16} \approx 11.2^{\circ}` rotation but along X axis. Results interpretation
-is pretty much the same as we did in the last two examples. Beam is now propagating more closely to a
-:math:`\theta = \frac{\pi}{2}` trajectory, so Z propagation reduces dramatically. For this example, analyses plans
-were slighly modified. We have used a higher portion of Y semi space and double of points::
+Let us add a :math:`\theta = \frac{\pi}{16} \approx 11.2^{\circ}` rotation along :math:`X` axis. Results
+interpretation is pretty much the same as we did in the last two examples. Beam is now propagating more closely
+to a :math:`\theta = \frac{\pi}{2}` trajectory, so :math:`Z` propagation reduces dramatically. For this example,
+analyses plans were slightly modified. We have used a higher portion of :math:`Y` semi space and double of points::
 
 >>> y_array = numpy.linspace(0, y/3, 401)
 
 .. figure:: figures/Example04_rotation-X-axis.png
     :align: center
 
-    *Figure 4.10 Beam rotated with respect to X.*
+    Figure 4.10 Beam rotated with respect to X.
 
-First it is important to note how the beam now looks very stigmatic, which
+First it is important to note how the beam now looks very astigmatic,
 
 .. figure:: figures/Example04_res0-01_tilted_pi-16-X-axis.png
     :align: center
 
-    *Figure 4.11 Left: Average position for X-Z. Center: Standard deviation for x-Z. Right: Weighted inverse for center of
-    mass and for parabola focal point. Beam rotated with respect to X.*
+    Figure 4.11 Left: Average position for X-Z. Center: Standard deviation for X-Z. Right: Weighted inverse for
+    center of mass and for parabola focal point. Beam rotated with respect to X.
 
-Snapshots show that beam is propagating less in Z. Beam is symmetric relative to X (divergence smaller than resolution).
+Snapshots show that beam is propagating less in :math:`Z`. Beam is symmetric relative to :math:`X`
+(divergence smaller than resolution).
 
 .. figure:: figures/Example04_res0-01_02_tilted_pi-16-X-axis.png
     :align: center
 
-    *Figure 4.12: Three distinct snapshots of the beam propagating in Y direction. Position are relative to
-    the black dots shown in previous average figure. Beam rotated with respect to X.*
+    Figure 4.12: Three distinct snapshots of the beam propagating in Y direction. Position are relative to
+    the black dots shown in previous average figure. Beam rotated with respect to X.
 
 If we export a .gif animation in order to see beam propagation, we have the following
 
 .. figure:: figures/Example04_res0-01_pi-16_tilted-X-axis.gif
     :align: center
 
-    *Figure 4.13: Left: Animation of X-Z plane of the beam propagating in Y axis. Beam rotated with respect to X.*
+    Figure 4.13: Left: Animation of X-Z plane of the beam propagating in Y axis. Beam rotated with respect to X.
 
 Code
 ****
@@ -673,17 +672,22 @@ example04.py::
 Multi Processing
 ----------------
 
-In this example, we show how can one use python standard library `multiprocessing <https://docs.python.org/3/library/multiprocessing.html#module-multiprocessing/>`_ in order
-to perform simulations with a high number of photons. User must call a few methods in order to enable them. First one is::
+In this example, we show how can one use python standard library
+`multiprocessing <https://docs.python.org/3/library/multiprocessing.html#module-multiprocessing/>`_ in order
+to perform simulations using multiple processes. User must call a few methods in order to enable them.
+First one is::
 
 >>> prepare_acquisition(nproc)
 
-Which basically splits your initial photons in *nproc* number of equal divisions. Each one of those subsets will be run in a different process.
+Which splits your initial photons in *nproc* number of equal divisions. Each one of those subsets will be run
+in a different process.
 
-.. note:: Calling run function will always call prepare_acquisition object. If no multiprocessing is used, nproc = 1 and photon list is identical to initial photon list.
+.. note:: Calling run function will always call prepare_acquisition object. If no multiprocessing is used,
+    nproc = 1 and photon list is identical to initial photon list.
 
-Second step is to use the *Manager()* object from multiprocessing library. In this example we will use a dict type in order to callback to our main function the results
-from our simulation. An example on how to do it is simply::
+Second step is to use the *Manager()* object from multiprocessing library. In this example we will use a
+dict type in order to callback to our main function the results from our simulation. An example on how to do
+it is simply::
 
 >>> manager = multiprocessing.Manager()
 >>> return_dict = manager.dict()
@@ -693,26 +697,30 @@ from our simulation. An example on how to do it is simply::
 >>>     jobs.append(p)
 >>>     p.start()
 
-In this case we created a list called jobs with all our processes and started them all using p.start(). return_dict - our *manager.dict()* is passed as an argument.
-Run function deals with this values copying its the habitual return function in return_dict.
+In this case we created a list called jobs with all our processes and started them all using p.start().
+return_dict - our *manager.dict()* is passed as an argument. Run function deals with this values copying
+its the habitual return function in return_dict.
 
-.. note:: Currently run function only supports return_dict from type *multiprocessing.managers.DictProxy*. Please fell free to improve this approach
+.. note:: Currently run function only supports return_dict from type *multiprocessing.managers.DictProxy*.
+    Please fell free to improve this approach
     in our `GitHub <https://github.com/yvesauad/OrsayTrace/>`_ repository.
 
-The third part is to call merge_photon_lists using the values retrived by our return dict. In order to wait for results, you can call *join()* before. This way
-you sure process is over and added values are meaningful ones::
+The third part is to call merge_photon_lists using the values retrieved by our return dict. In order to wait
+for results, you can call *join()* before. This way you guarantee process is over and added values are meaningful
+ones::
 
 >>> for index, proc in enumerate(jobs):
 >>>     proc.join()
 >>>     a.merge_photon_lists(return_dict.values()[index])
 
-Please be careful to do not call this function several times. There is no way to check if the photon has been already added to the list or not at the moment. Calling
-several times will add repeated photons to your main photon_lists. If user want to see each subset of photon that was ran by an specific process, one can use::
+Please be careful to do not call this function several times. There is no way to check if the photon has been
+already added to the list or not at the moment. Calling several times will add repeated photons to your main
+photon_lists. If user want to see each subset of photon that was ran by an specific process, one can use::
 
 >>> show_elements(return_dict.values()[index], 'all-noplan-verbose')
 
-In which -verbose prints in the terminal the number of photons in each plan. You can see that if you run the same code at the end after merge_photon_lists, your number of photons
-will be the sum of each individual core.
+In which -verbose prints in the terminal the number of photons in each plan. You can see that if you run the same
+code at the end after merge_photon_lists, your number of photons will be the sum of each individual core.
 
 
 Results
@@ -725,18 +733,18 @@ processor with 32 Gb of RAM (RAM was not a limiting factor here). Second machine
 `Intel Xeon Silver 4214 <https://www.intel.fr/content/www/fr/fr/products/processors/xeon/scalable/silver-processors/silver-4214.html>`_
 processor with 200 Gb RAM using windows 10 as an OS. It is a dedicated computer to perform heavy simulations.
 
-Simulation were done using a :math:`(5, 5, 5)` cell with 0.05 resolution. :math:`30` analyses plans were put and a point
-source spawned angles with :math:`na = 0.39` within :math:`101` angles. All photons were merged at simulation end and
-time shown is that total time calculated using::
+Simulation were done using a :math:`(5, 5, 5)` cell with :math:`0.05` resolution. :math:`30` analyses plans
+were put and a point source spawned angles with :math:`na = 0.39` within :math:`101` angles. All photons were
+merged at simulation end and time shown is that total time calculated using::
 
 >>> from time import perf_counter
 
 .. figure:: figures/Example05.png
     :align: center
 
-    *Figure 5.1: Performance with different machine conditions. We have compared a Intel i7 8665U
+    Figure 5.1: Performance with different machine conditions. We have compared a Intel i7 8665U
     and a Intel Xeon Silver 4214 processors running Windows 10 OS. Ubuntu 20.04 was also compared
-    to Windows 10.*
+    to Windows 10.
 
 We readily see that Intel Xeon 4214 loses to both other conditions. For single core, there is no reason they
 differ much, as processor core frequency are similar for both processors. Intel i7 running W10, however, shows a
@@ -756,15 +764,15 @@ plan (which is this case), we need to append :math:`n_{plans}*photons` in a seri
 the same time independently from number of processing. In the case above, this defines simulation
 base line in time and was approximately 8 minutes.
 
-Another factor that prevents is the small simulation size, which sometimes means that do not even
-reach all processes running because the first ones were already finished.
+Another factor that prevents is the small simulation size, which sometimes means that simulation do not even
+reach all processes running because the first ones were already finished when others are being placed.
 
 In order to understand better the impact of multiprocessing library, we have performed a simulation with a
 single plan, a point source spawning :math:`101` plans over a very narrow numerical aperture :math:`0.0005`
 in a cell size of :math:`(1, 1, 320)`. Resolution was set to :math:`0.02` and total number of photons
 were :math:`31320`.
 
-Figure 5.2 shows the result. Time goes very close to photons/core, which means a truly independent parallel
+Figure 5.2 shows the result. Time goes very close to photons/core, which means truly independent parallel
 tasks and reduces total simulation time from :math:`4 h` to :math:`13 min`, a factor of :math:`18` when using
 42 processes (computer runs with 48 logical processors). We see however that we reach a plateau when going
 beyond the :math:`24` physical cores. A factor of :math:`17` is gained in simulation time from :math:`1` to
@@ -773,8 +781,8 @@ beyond the :math:`24` physical cores. A factor of :math:`17` is gained in simula
 .. figure:: figures/Example05_02.png
     :align: center
 
-    *Figure 5.2: Performance using a Intel Xeon Silver 4214 for multiprocessing. We have used from 1 to
-    42 processes. Machine has 24 physical cores and 48 logical processors.*
+    Figure 5.2: Performance using a Intel Xeon Silver 4214 for multiprocessing. We have used from 1 to
+    42 processes. Machine has 24 physical cores and 48 logical processors.
 
 Code
 ****
