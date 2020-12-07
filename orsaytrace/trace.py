@@ -1090,7 +1090,7 @@ class Simu:
         '''
         A circular flexible source method. It can create planar sources in X, Y or Z with a given
         normal vector and a given numerical aperture referenced by the normal. Angle discretization
-        is controllable. A point source is also readily available.
+        is controllable. A point source is also available.
 
         Parameters
         ----------
@@ -1134,7 +1134,7 @@ class Simu:
         ------
         AssertionError
             Negative numerical aperture and - if numerical aperture is higher than 0 - normal not in an axis
-             (can be [0, 0, 1]; [0, 1, 0] or [1, 0, 0]).
+            (can be [0, 0, 1]; [0, 1, 0] or [1, 0, 0]).
 
         '''
 
@@ -1198,15 +1198,23 @@ class Simu:
                             if 'x' in plan and 'z' in plan: create_photon([-xpos + 2 * xc, ypos, -zpos+2*zc], normal2)
                             if 'y' in plan and 'z' in plan: create_photon([xpos, -ypos+2*yc, -zpos + 2 * zc], normal2)
 
-    def d2_source(self, r, c=[0, 0, 0], normal=[0, 0, 1], na = 0.0, angles=11):
+    def d2_source(self, radius, center=[0, 0, 0], normal=[0, 0, 1], na = 0.0, angles=11):
         '''
-        Creates a 2d source along axis z with a numerical aperture
+        Creates a 2d source along a given normal and an numerical aperture. Source can only be created
+        in X-Y plan.
+
+        See Also
+        --------
+        d2_flex_source:
+            A more complete option. d2_source is a subset of d2_flex_source in terms of functionality.
+            d2_flex_source can create a numerical aperture cone for any given normal vector and can
+            create sources in plans other than X-Y.
 
         Parameters
         ----------
-        r: float
+        radius: float
             Source radius. If 0.0, creates a point source.
-        c: array_like:
+        center: array_like:
             Source center.
         normal: array_like
             Source normal. Photon propagation direction
@@ -1219,21 +1227,22 @@ class Simu:
         -------
         >>> d2_source(0.1, [0, 0, 0], [0, 0, 1], na=0.0, angles=1)
         
-        Creates a collimated source with radius 0.1 centered at [0, 0, 0].
+        Creates a collimated source with radius 0.1 centered at [0, 0, 0] in X-Y plane.
 
         >>> d2_source(0.0, [0, 0, 0], [0, 0, 1], na=0.22, angles=11)
 
-        Creates a point source centered at [0, 0, 0] with numerical aperture 0.22. Angles are discretized by 0.04 (-0.22 to 0.22) in 11 points.
+        Creates a point source centered at [0, 0, 0] with numerical aperture 0.22.
+        Angles are discretized by 0.044 (-0.22 to 0.22) in 11 points. Source is in X-Y plane.
 
         >>> d2_source(0.3, [0, 0, 0], [0, 0, 1], na=0.22, angles=11)
 
         Creates a diverging source centered at [0, 0, 0] with numerical aperture 0.22 and radius 0.3.
+        Source is in X-Y plane.
 
         Raises
         ------
         AssertionError
-            If numerical aperture is higher than 0, propagation vector must be aligned with an axis. This
-            function does not create an angle cone for an arbitrary propagation vector.
+            If numerical aperture is higher than 0, propagation vector must be aligned with an axis.
         '''
 
         if na>0:
@@ -1264,30 +1273,31 @@ class Simu:
             all_vecs = numpy.asarray([normal])
 
 
-        xc, yc, zc = c
-        x = numpy.arange(xc-r, xc+self.res/2., self.res)
-        y = numpy.arange(yc-r, yc+self.res/2., self.res)
+        xc, yc, zc = center
+        x = numpy.arange(xc-radius, xc+self.res/2., self.res)
+        y = numpy.arange(yc-radius, yc+self.res/2., self.res)
         if not x.size>0:
             x=[xc]
             y=[yc]
         for xpos in tqdm(x, desc='Source'):
             for ypos in y:
-                if (xpos-xc)**2+(ypos-yc)**2<=r**2:
+                if (xpos-xc)**2+(ypos-yc)**2<=radius**2:
                     for normal2 in all_vecs:
                         self.photons = numpy.append(self.photons, photon([xpos, ypos, zc], normal2))
                         self.photons = numpy.append(self.photons, photon([-xpos+2*xc, ypos, zc], normal2))
                         self.photons = numpy.append(self.photons, photon([xpos, -ypos+2*yc, zc], normal2))
                         self.photons = numpy.append(self.photons, photon([-xpos+2*xc, -ypos+2*yc, zc], normal2))
 
-    def d2_source_rectangle(self, size, c=[0, 0, 0], normal=[0, 0, 1], na=0.0, angles=11):
+    def d2_source_rectangle(self, size, center=[0, 0, 0], normal=[0, 0, 1], na=0.0, angles=11):
         '''
-        Creates a 2d source along axis z with a numerical aperture
+        Creates a rectangular 2D source in X-Y plane for any given normal vector and numerical
+        aperture.
 
         Parameters
         ----------
-        r: float
-            Source radius. If 0.0, creates a point source.
-        c: array_like:
+        size: array_like
+            Source size in X-Y.
+        center: array_like:
             Source center.
         normal: array_like
             Source normal. Photon propagation direction
@@ -1299,10 +1309,11 @@ class Simu:
         Raises
         ------
         AssertionError
-            If numerical aperture is higher than 0, propagation vector must be aligned with an axis. This
-            function does not create an angle cone for an arbitrary propagation vector.
+            len(size) is not 2 or any of the values are negative or equal to zero. Also if numerical
+            aperture is a negative value.
         '''
 
+        assert na>=0
         if na > 0:
             check_list = [normal[i] == 0 for i in range(3)]
             check_list.sort()
@@ -1334,7 +1345,7 @@ class Simu:
         xlen, ylen = size
         assert xlen>0 and ylen>0
 
-        xc, yc, zc = c
+        xc, yc, zc = center
         x = numpy.arange(xc - xlen/2., xc+self.res/2., self.res)
         y = numpy.arange(yc - ylen/2., yc+self.res/2., self.res)
 
@@ -1346,10 +1357,34 @@ class Simu:
                     self.photons = numpy.append(self.photons, photon([xpos, -ypos + 2 * yc, zc], normal2))
                     self.photons = numpy.append(self.photons, photon([-xpos + 2 * xc, -ypos + 2 * yc, zc], normal2))
 
-    def create_chessboard(self, ts, center, mesh, normal=[0, 0, 1], na=0.0, angles=11):
+    def create_chessboard(self, total_size, center, mesh, normal=[0, 0, 1], na=0.0, angles=11):
+        '''
+        Create a chessboard like source.
+
+        Parameters
+        ----------
+        total_size: float
+            Total size of the chessboard.
+        center: array_like
+            Center of the chessboard.
+        mesh: int
+            Chessboard discretization. Unit square has total_size / mesh size.
+        normal: array_like
+            Propagation vector.
+        na: float
+            Numerical aperture.
+        angles: int
+            Numerical aperture angle discretization
+
+        Raises
+        ------
+        AssertionError
+            If mesh is not an integer.
+
+        '''
         assert type(mesh)==int
         xc, yc, zc = center
-        unit_size = ts / mesh
+        unit_size = total_size / mesh
         x = numpy.linspace(xc-ts/2.+unit_size/2., xc+ts/2.-unit_size/2., mesh)
         y = numpy.linspace(yc - ts / 2. + unit_size / 2., yc + ts / 2. - unit_size / 2., mesh)
         for xi, xpos in enumerate(x):
@@ -1357,10 +1392,40 @@ class Simu:
                 if not (xi+yi)%2:
                     self.d2_source_rectangle([unit_size, unit_size], [xpos, ypos, zc], normal, na, angles)
 
-    def create_fiberbundle(self, tr, center, mesh, normal=[0, 0, 1], na=0.0, angles=11):
+    def create_fiberbundle(self, total_radius, center, mesh, normal=[0, 0, 1], na=0.0, angles=11):
+        '''
+        Create a optical fiber bundle like source.
+
+        Parameters
+        ----------
+        total_radius: float
+            Total radius in which the bundle in necessarily inside.
+        center: array_like
+            The center of the bundle.
+        mesh: int
+            Bundle discretization factor. Each fiber has total_radius / mesh radius.
+        normal: array_like
+            Propagation direction.
+        na: float
+            Numerical aperture.
+        angles: int
+            Numerical aperture angle discretization.
+
+        Raises
+        ------
+        AssertionError
+            If mesh is not an integer or if mesh is an even number
+
+        Notes
+        -----
+        Mesh must be an odd number. This comes from the selection rule of fibers inside bundle
+        to do not overlap.
+
+        '''
         assert type(mesh)==int
+        assert (mesh%2)==1
         xc, yc, zc = center
-        unit_radius = tr / mesh
+        unit_radius = total_radius / mesh
         x = numpy.linspace(xc-tr+unit_radius, xc+tr-unit_radius, mesh)
         y = numpy.linspace(yc-tr+unit_radius, yc + tr- unit_radius, mesh)
         for xi, xpos in enumerate(x):
@@ -1370,7 +1435,8 @@ class Simu:
 
     def rotate(self, ang, axis, origin, ROI = None):
         '''
-        Rotate a selected ROI in a given direction and origin. This function only rotates grid points that have index of refraction different of 1.
+        Rotate a selected ROI in a given direction and origin. This function only
+         rotates grid points that have index of refraction different of 1.
 
         Parameters
         ----------
@@ -1381,12 +1447,13 @@ class Simu:
         origin: array_like
             A 3 dimensional origin position.
         ROI: array_like
-            A 6 dimensional ROI in the form of **[xmin, xmax, ymin, ymax, zmin, zmax]**.
+            A 6 dimensional ROI in the form of [xmin, xmax, ymin, ymax, zmin, zmax].
 
         Raises
         ------
         Exception
             If there is no element to rotate.
+
         '''
         axis = axis / numpy.linalg.norm(axis)
         ux, uy, uz = axis
@@ -1480,19 +1547,19 @@ class Simu:
             self.assign_n(grid_pos, ind_refr)
             self.assign_normal(grid_pos, normal)
 
-    def create_parabolic_surface_element(self, c, n, th, wid, pp):
+    def create_parabolic_surface_element(self, center, n_refr, thickness, width, pp):
         '''
         Creates a parabolic element surface.
 
         Parameters
         ----------
-        c: array_like
+        center: array_like
             A 3 dimensional position.
-        n: float
+        n_refr: float
             The index of refraction. -1 creates a reflective material.
-        th: float
+        thickness: float
             Thickness of the element. Y direction total size is given by this value.
-        wid: float
+        width: float
             Width of the element. X direction total size is given by this value.
         pp: float
             P parameter of the parabola.
