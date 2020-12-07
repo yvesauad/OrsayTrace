@@ -441,7 +441,7 @@ Second weighted inverse is a static point. We will discuss the meaning of it in 
 .. figure:: figures/Example04_end.png
     :align: center
 
-    *igure 4.2: Simulation end point using a resolution of 0.05.
+    Figure 4.2: Simulation end point using a resolution of 0.05.
 
 As we will se in results, we have also performed rotation measurements. Rotation method checks
 for active grid point, such as :math:`n_{refr} \neq 1`. It is an expensive method because it does

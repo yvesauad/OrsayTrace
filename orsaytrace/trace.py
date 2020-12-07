@@ -9,7 +9,8 @@ import multiprocessing as multiproc
 
 class photon_list():
     '''
-    photon_list is a class that bounds photons together by a plane and a condition. Plane is characterized by a normal vector and its value.
+    photon_list is a class that bounds photons together by a plane and a condition. Plane is characterized
+     by a normal vector and its independent value.
 
     Parameters
     ----------
@@ -27,7 +28,7 @@ class photon_list():
 
     def append_photon(self, photon):
         '''
-        Append a photon tp the photon_list given that the condition is True. 
+        Append a photon to the photon_list given that the condition is satisfied.
     
         Parameters
         ----------
@@ -58,7 +59,8 @@ class photon_list():
 
     def add_photon(self, sphoton):
         '''
-        Instanteates a new photon before calling append_photon. Append photon checks if photon object satifies conditions.
+        Instantiates a new photon before calling append_photon. Append photon checks if photon
+         object satisfies all conditions.
 
         Parameters
         ----------
@@ -69,17 +71,15 @@ class photon_list():
         new_photon.set_attr( sphoton.get_attr() )
         self.append_photon(new_photon)
 
-    def distance(self, pos):
-        print('test')
 
-
-    def distance_point_to_plane(self, pos: list):
+    def distance_point_to_plane(self, pos):
         '''
         Calculates the distance from a given point to plane.
 
         Parameters
         ----------
-        pos: A 3 dimensional list of a given position
+        pos: array_like
+            A 3 dimensional list of a given position
 
         Returns
         -------
@@ -90,7 +90,9 @@ class photon_list():
 
     def add_symmetric_xphoton(self, sphoton):
         '''
-        Instanteates a new X symmetric photon before callind append_photon. Append photon checks if photon object satifies conditions.
+
+        Instantiates a new X symmetric photon before calling append_photon. Append photon checks if
+        photon object satisfies conditions.
 
         Parameters
         ----------
@@ -106,7 +108,9 @@ class photon_list():
     
     def add_symmetric_yphoton(self, sphoton):
         '''
-        Instanteates a new Y symmetric photon before callind append_photon. Append photon checks if photon object satifies conditions.
+
+        Instantiates a new Y symmetric photon before calling append_photon. Append photon checks
+        if photon object satisfies conditions.
 
         Parameters
         ----------
@@ -132,7 +136,7 @@ class photon_list():
         Returns
         ------
         float
-            A float provenient from a numpy.average based on vector direction and propagation direction for each photon
+            A float from a numpy.average based on vector direction and propagation direction for each photon.
 
         '''
         vec_ref = vec_ref / numpy.linalg.norm(vec_ref)
@@ -153,13 +157,14 @@ class photon_list():
 
     def get_relative_centroid_positions(self):
         '''
-        Get the relative position of all photons in the photon_list relative from centroid (calculted using avg_position)
+        Get the relative position of all photons in the photon_list relative from plane center of mass
+        (calculted using avg_position).
 
         Returns
         -------
         numpy.asarray
         '''
-        #Relative position to centroid for each photon
+
         vals = self.get_positions() - self.avg_position()
         return vals
 
@@ -169,20 +174,20 @@ class photon_list():
 
         Returns
         -------
-        numpy.asarray
+        float
         '''
-        #Relative distance to centroid for each photon
+
         vals = numpy.sqrt(numpy.sum(numpy.power(self.get_relative_centroid_positions(), 2), axis=1))
         return vals
 
     def get_intensities(self):
         '''
-        Gets the intensity of all photons in the photon_list
+        Gets the intensity of all photons in the photon_list.
 
         Returns
         -------
         numpy.asarray
-            A photons-dimensional numpy array
+            A photon-dimensional numpy array.
         '''
         vals = numpy.asarray([photon.intensity for photon in self.photons])
         return vals
@@ -194,7 +199,7 @@ class photon_list():
         Returns
         ----------
         numpy.asarray
-            A 3 dimensional numpy array
+            A positional 3 dimensional numpy array.
 
         '''
         vals = numpy.asarray([numpy.average([photon.pos[axis] for photon in self.photons]) for axis in range(3)])
@@ -207,7 +212,7 @@ class photon_list():
         Returns
         -------
         numpy.asarray
-            A 3 dimensional numpy array
+            A positional 3 dimensional numpy array.
         '''
         vals = numpy.asarray([numpy.amax([photon.pos[axis] for photon in self.photons]) for axis in range(3)])
         return vals
@@ -216,15 +221,12 @@ class photon_list():
         '''
         Calculates the min position in each axis for all photons in photon_list.
 
-        Parameters
-        ----------
-        pos: A 3 dimensional list of a given position
-
         Returns
         -------
         numpy.asarray
-            A 3 dimensional numpy array
+            A positional 3 dimensional numpy array
         '''
+
         vals = numpy.asarray([numpy.amin([photon.pos[axis] for photon in self.photons]) for axis in range(3)])
         return vals
     
@@ -242,13 +244,15 @@ class photon_list():
 
     def get_weighted_inverse(self):
         '''
-        Calculates the division of intensity and photon relative distance from centroid fro all photons in photon_list
+        Calculates the division of intensity and photon relative distance from center of mass
+        from all photons in photon_list.
 
         Returns
         -------
         numpy array
-            A n dimensional numpy array
+            A photon-dimensional numpy array
         '''
+
         vals = numpy.divide(self.get_intensities(), self.get_relative_centroid_distances())
         return vals
 
@@ -259,56 +263,73 @@ class photon_list():
         Returns
         -------
         float
+
+        See Also
+        --------
+        get_weighted_inverse
         '''
+
         vals = float(numpy.average(self.get_weighted_inverse()))
         return vals
 
-    def avg_distance_axis_z(self, c=[0, 0]):
+    def avg_distance_axis_z(self, center=[0, 0]):
         '''
-        Calculates the distance for all photons in photon_list relative to a (x, y) coordinate in  a Z normal plane.
+        Calculates the distance for all photons in photon_list relative to a (x, y) coordinate
+        in a Z normal plane.
 
         Parameters
         ----------
-        c: The position in x, y plane
+        center: array_like
+            The position in x, y plane
 
         Returns
         -------
         float
         '''
-        xc, yc = c[0], c[1]
+
+        xc, yc = center[0], center[1]
         vals = float(numpy.average([numpy.sqrt((photon.pos[0]-xc)**2+(photon.pos[1]-yc)**2) for photon in self.photons]))
         return vals
     
-    def avg_distance_axis_y(self, c=[0, 0]):
+    def avg_distance_axis_y(self, center=[0, 0]):
         '''
-        Calculates the distance for all photons in photon_list relative to a (x, z) coordinate in a Y nornal plane.
+        Calculates the distance for all photons in photon_list relative to a (x, z) coordinate
+        in a Y normal plane.
 
         Parameters
         ----------
-        c: The position in x, z plane
+        center: The position in x, z plane
 
         Returns
         -------
         float
         '''
-        xc, zc = c[0], c[1]
+
+        xc, zc = center[0], center[1]
         vals = float(numpy.average([numpy.sqrt((photon.pos[0]-xc)**2+(photon.pos[2]-zc)**2) for photon in self.photons]))
         return vals
     
-    def get_average_weighted_inverse_axis_y(self, c=[0, 0]):
+    def get_average_weighted_inverse_axis_y(self, center=[0, 0]):
         '''
         Calculates the average of get_weighted_inverse relative to a (x, z) coordinate in Y normal plane.
 
         Parameters
         ----------
-        c: The position in x, z plane
+        center: The position in x, z plane
 
         Returns
         ------
         float
+
+        Raises
+        ------
+        AssertionError
+            If normal is not in Y direction.
         '''
+
         assert (self.normal == [0, 1, 0]).all()
-        pos = self.get_positions() - numpy.asarray([c[0], self.value, c[1]])
+        xc, zc = center[0], center[1]
+        pos = self.get_positions() - numpy.asarray([xc, self.value, zc])
         dist = numpy.sqrt(numpy.sum(numpy.power(pos, 2), axis=1))
         wi = numpy.divide(self.get_intensities(), dist)
         avg_wi = float(numpy.average(wi))
@@ -318,30 +339,30 @@ class photon_list():
 class photon():
 
     '''
-    A photon is the basic structure of this simulation. It contains the attributes pos, normal, intensity, n, last_surface, refraction_count and reflection_count
+    A photon is the basic structure of this simulation. It contains the attributes pos, normal, intensity,
+    n, last_surface, refraction_count, reflection_count and a *init* dictionary.
 
     Parameters
     ----------
     pos: list
-        A 3 dimensional list stating each photon position
+        A 3 dimensional list stating each photon position.
     normal: list
-        A 3 dimensional list stating each photon normal (or wavevector)
+        A 3 dimensional list stating each photon normal (or wavevector).
     intensity: float
-        A float for the initial photon intensity
+        A float for the initial photon intensity.
 
-    Notes
+    Other Parameters
     -----
-
-    Other attributes of photon available to user and used during simulation run:
-
     n: float
-        Index of refraction
+        Index of refraction.
     last_surface: array_like
-        As photons crosses the grid, it overwrites the last valid surface normal
+        As photons crosses the grid, it overwrites the last valid surface normal.
     refraction_count: int
-        Number os refractions photon has done
+        Number os refractions photon has done.
     reflection_count: int
-        Number os reflections photon has done
+        Number os reflections photon has done.
+    init: dict
+        A dictionary that does not change during simulation. Can be used to track photons.
     '''
 
     def __init__(self, pos, normal, intensity=1.):
@@ -364,7 +385,8 @@ class photon():
         Parameters
         ----------
         values: array_like
-            An array_like object as following: **[pos, normal, intensity, n, last_surface, refraction_count, reflection_count]**
+            An array_like object as following: **[pos, normal, intensity, n, last_surface, refraction_count,
+            reflection_count]**
         '''
 
         self.pos, self.normal, self.intensity, self.n, self.last_surface, self.refraction_count, self.reflection_count, self.init = values
@@ -376,20 +398,29 @@ class photon():
         Returns
         -------
         array_like
-            An array_like object as following: **[pos, normal, intensity, n, last_surface, refraction_count, reflection_count]**
+            An array_like object as following: **[pos, normal, intensity, n, last_surface, refraction_count,
+            reflection_count]**
         '''
         return self.pos, self.normal, self.intensity, self.n, self.last_surface, self.refraction_count, self.reflection_count, self.init
 
 
-    def reflection(self):
+    def reflection(self, mode=''):
         '''
-        Reflection photon object using last_surface attribute.
+        Reflection photon object using last_surface.
+
+        Parameters
+        ----------
+        mode: str
+            If '-verbose', prints reflection details in the following order:
+            reflection_count, incident normal, surface normal, reflected vector, current position.
 
         Returns
         -------
         boolean
-            True if reflection is sucessfull and false if you attempted a reflection in a grid which there was no surface normal vector.
+            True if reflection is successful and false if you attempted a reflection in a grid which
+            there was no surface normal vector.
         '''
+
         inc = self.normal
         inc = inc / numpy.linalg.norm(inc)
         sur_normal = self.last_surface
@@ -410,7 +441,7 @@ class photon():
         self.reflection_count+=1
 
         self.normal = refl
-        #print(self.reflection_count, inc, sur_normal, refl, self.pos)
+        if '-verbose' in mode: print(self.reflection_count, inc, sur_normal, refl, self.pos)
         return True
     
     def refraction(self, n2):
