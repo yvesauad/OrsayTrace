@@ -48,13 +48,7 @@ If you wish to download our repo and eventually contribute, use git clone instea
 >>> git clone https://github.com/yvesauad/OrsayTrace.git
 
 Moving to the created directory will give you access to the whole code. Main
-module is included in trace.py. Contributions can be done using pull requests
-and reposity update can be done simply by::
-
->>> git pull
-
-
-
+module is included in trace.py.
 
 
 .. toctree::

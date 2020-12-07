@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
 import multiprocessing as multiproc
+import logging
 
 
 
@@ -404,15 +405,9 @@ class photon():
         return self.pos, self.normal, self.intensity, self.n, self.last_surface, self.refraction_count, self.reflection_count, self.init
 
 
-    def reflection(self, mode=''):
+    def reflection(self):
         '''
         Reflection photon object using last_surface.
-
-        Parameters
-        ----------
-        mode: str
-            If '-verbose', prints reflection details in the following order:
-            reflection_count, incident normal, surface normal, reflected vector, current position.
 
         Returns
         -------
@@ -427,7 +422,7 @@ class photon():
         
         if all([sur_normal[i]==0 for i in range(3)]):
         #if all([sur_normal[i]!=0 for i in range(3)]):
-            print('***WARNING***: No surface normal.')
+            logging.warning('***REFLECTION***: No surface normal.')
             return False
         
         sur_normal = sur_normal / numpy.linalg.norm(sur_normal)
@@ -441,33 +436,33 @@ class photon():
         self.reflection_count+=1
 
         self.normal = refl
-        if '-verbose' in mode: print(self.reflection_count, inc, sur_normal, refl, self.pos)
+        #print(self.reflection_count, inc, sur_normal, refl, self.pos)
         return True
     
-    def refraction(self, n2):
+    def refraction(self, n_refr):
         '''
-        Refraction photon object using last_surface attribute and a given index of refraction.
+        Refraction photon object using last_surface and a given index of refraction.
 
         Parameters
         ----------
-        n2: float
+        n_refr: float
             The index of refraction.
-        
 
         Returns
         -------
         boolean
-            True if refraction is sucessfull and false if you attempted a refraction in a grid which there was no surface normal vector
+            True if refraction is successful and false if you attempted a refraction
+            in a grid which there was no surface normal vector
         '''
         
-        r = self.n/n2
+        r = self.n/n_refr
         inc = self.normal
         inc = inc / numpy.linalg.norm(inc)
         
         sur_normal = self.last_surface
         
         if all([sur_normal[i]==0 for i in range(3)]):
-            print('***WARNING***: No surface normal.')
+            logging.warning('***REFRACTION***: No surface normal.')
             return False
 
         sur_normal = sur_normal / numpy.linalg.norm(sur_normal)
@@ -496,7 +491,7 @@ class photon():
             self.refraction_count+=1
             self.normal = refr
         
-        self.n = n2 #now photon index of refraction
+        self.n = n_refr #now photon index of refraction
         #print(self.refraction_count, inc, sur_normal, self.n)
         return True
 
@@ -508,40 +503,39 @@ class photon():
         ----------
         value: float
             Increment photon position by value and given by normal (photon direction)
-        
 
         Returns
         -------
         boolean
-            True if is sucessfull.
+            True if is successful.
         '''
         self.pos = self.pos + self.normal*value
         return True
 
     def update(self, value):
         '''
-        Update is a core function that updates photon last_surface and photon normal by means of refractions of reflections.
+        Update is a core function that updates photon last_surface and photon normal
+        by means of refractions of reflections.
 
         Parameters
         ----------
         value: array_like
-            A 2 dimensional array where first index is the surface normal and the second is the index of refraction.
+            A 2 dimensional array where first index is the surface normal and the second
+            is the index of refraction.
 
         Returns
         -------
         boolean
-            True if photon suffered a refraction or reflection. False if nothing happens with photon normal.
+            True if photon suffered a refraction or reflection. False if not.
 
-        
         Notes
         --------
-        If return is True, photon moves a single step without refraction/reflection using move. This avoids non intentional double reflections/refractions
-
+        If return is True, photon moves a single step without refraction/reflection using move.
+        This avoids non intentional double reflections/refractions.
         '''
 
         sur_normal, index = value
 
-        #if sur_normal != [0, 0, 0]:
         if not all([sur_normal[i]==0 for i in range(3)]):
             self.last_surface = sur_normal
         
@@ -557,36 +551,41 @@ class photon():
 
 class Simu:
     '''
-    A simulation class that will allow one to create sereral objects and perform spacial transformations, such as rotations. This class also contains a few convenient functions in order to display data easily to the user. 
+    A simulation class that will allow one to create a space grid.
+    This class also contains a few convenient functions in order to easily display
+    data using matplotlib.
 
     Parameters
     ----------
     x: float
-        A float representing cell size in x
+        Cell size in x.
     y: float
-        A float representing cell size in y
+        Cell size in y.
     z: float
-        A float representing cell size in z
+        Cell size in z.
     res: float
-        A float for simulation resolution.
+        Simulation resolution.
 
-    Notes
-    -----
-
-    Other attributes of simulation available to user and used during simulation run:
-
+    Other Parameters
+    ----------------
     ss: int
-        A subsampling factor. Default is 2.01 and it says meshing will be done using sub pixels resolution.
+        A subsampling factor. Default is 2.01 and it says meshing will be done using
+        sub pixels resolution for object creation.
     grid: array_like
         A 3 dimensional array for the number of grid points.
     index: numpy array
-        A numpy array initialized as **numpy.ones(grid)**. This means initial cell is under vacuum for all wavelengths.
+        A numpy array initialized as **numpy.ones(grid)**. This means initial
+        cell is under vacuum for all wavelengths.
     normal: numpy array
-        A numpy array initialized as **numpy.asarray([numpy.zeros(grid), numpy.zeros(grid), numpy.zeros(grid)])** to all surface normals. Initial cell has no valid surface normals because there is no surfaces.
+        A numpy array initialized as
+        **numpy.asarray([numpy.zeros(grid), numpy.zeros(grid), numpy.zeros(grid)])** to all
+        surface normals. Initial cell has no valid surface normals.
     photons: list
-        A list containing photon objects. Those photons will propagate and be saved along the simulation.
+        A list containing photon objects. Those photons will propagate and be saved in
+        class.photon_lists along the simulation.
     photon_lists: numpy array
-        A numpy array cointaining photon_lists objects. photons will be saved here. Array length is given by the number of analyzes plans.
+        A numpy array containing photon_lists objects. Array length is given by the number
+        of created plans.
     '''
 
     def __init__(self, x, y, z, res):
@@ -604,14 +603,14 @@ class Simu:
 
     def assign_normal(self, index, normal):
         '''
-        Assigns a surface normal in a given index
+        Assigns a surface normal in a given index.
 
         Parameters
         ----------
         index: array_like
-            A three dimensional array with grid position (in pixels).
+            A positional 3 dimensional array.
         normal: array_like
-            A three dimensional array with the correspondent surface normal.
+            A vectorial 3 dimensional array.
         '''
 
         if (normal!=numpy.zeros(3)).all(): 
@@ -627,12 +626,13 @@ class Simu:
         Parameters
         ----------
         min_index: array_like
-            A three dimensional array with grid position (in pixels) for the botton left point.
+            A positional 3 dimensional array (bottom left point).
         max_index: array_like
-            A three dimensional array with grid position (in pixels) for the top right point.
+            A tpositional 3 dimensional array (top right point).
         normal: array_like
-            A three dimensiona array with the correspondent surface normal.
+            A vectorial three dimensional array.
         '''
+
         if (normal!=numpy.zeros(3)).all():
             normal = normal / numpy.linalg.norm(normal)
         for i in range(3):
@@ -640,42 +640,44 @@ class Simu:
 
     def assign_n(self, index, value):
         '''
-        Assigns index of refraction for a given point
+        Assigns index of refraction for a given point.
 
         Parameters
         ----------
         index: array_like
-            A three dimensional array with grid position (in pixels).
+            A positional 3 dimensional array.
         value: float
-            The desired index of refraction
+            The index of refraction.
         '''
+
         self.index[index[0], index[1], index[2]] = value
     
     def assign_block_n(self, min_index, max_index, value):
         '''
-        Assigns index of refraction for multiple points at once
+        Assigns index of refraction for multiple points at once.
 
         Parameters
         ----------
         min_index: array_like
-            A three dimensional array with grid position (in pixels) for the botton left point.
+            A positional 3 dimensional array (bottom left point).
         max_index: array_like
-            A three dimensional array with grid position (in pixels) for the top right point.
+            A positional 3 dimensional array (top right point).
         normal: array_like
-            A three dimensiona array with the correspondent surface normal.
+            A vectorial 3 dimensional array.
         '''
+
         self.index[min_index[0]:max_index[0], min_index[1]:max_index[1], min_index[2]:max_index[2]] = value
 
     def pos_to_grid_1D(self, value, index):
         '''
-        Gets grid index from position for a single dimensional axis
+        Gets grid index from position for a single dimensional axis.
 
         Parameters
         ----------
         value: float
-            Desired position
+            The position.
         index:
-            Desired axis (0 for 'x', 1 for 'y' and 2 for 'z')
+            Desired axis (0 for 'x', 1 for 'y' and 2 for 'z').
 
         Returns
         -------
@@ -684,14 +686,12 @@ class Simu:
 
         Raises
         ------
-        Exception
+        AssertionError
             If value is outside cell boundaries.
         '''
 
         assert abs(value)<=self.size[index]/2.0
-
         return round((value/(self.size[index]/2.)+1)/2*self.grid[index])
-        
 
     def pos_to_grid(self, pos):
         '''
@@ -700,18 +700,19 @@ class Simu:
         Parameters
         ----------
         pos: float
-            Desired position
+            Position.
 
         Returns
         -------
         array_like
-            Grid position
+            Grid position.
 
         Raises
         -----
-        Exception
-            If value is outside cell boundaries
+        AssertionError
+            If value is outside cell boundaries.
         '''
+
         assert all([abs(pos[i])<=self.size[i]/2.0 for i in range(3)])
         indexes = [round((pos[i]/(self.size[i]/2.)+1)/2*self.grid[i]) for i in range(3)]
         if any([indexes[i]>=self.grid[i] for i in range(3)]):
@@ -747,7 +748,7 @@ class Simu:
         Parameters
         ----------
         pos: array_like
-            Desired Position.
+            Position.
 
         Returns
         -------
@@ -756,11 +757,10 @@ class Simu:
 
         Raises
         ------
-        Exception
-            If value is outside cell boundaries
+        AssertionError
+            If value is outside cell boundaries.
         '''
-        #this returns current index of refraction of a given photon in a given position
-        
+
         assert all([abs(pos[i])<=self.size[i]/2.0 for i in range(3)])
         indexes = self.pos_to_grid(pos)
         return self.index[indexes[0], indexes[1], indexes[2]]
@@ -772,14 +772,13 @@ class Simu:
         Parameters
         ----------
         pos: array_like
-            Desired Position.
+            Position.
 
         Returns
         -------
         array_like:
             The correspondent normal direction.
         '''
-        #this returns surface normal (if exists) of a given photon in a given position
 
         indexes = self.pos_to_grid(pos)
         return numpy.asarray([self.normal[0][indexes[0], indexes[1], indexes[2]],
@@ -788,34 +787,50 @@ class Simu:
     
     def normal_and_index_from_pos(self, pos):
         '''
-        Get both normal surface and index of refraction from pos
+        Get both normal surface and index of refraction from position.
 
         Parameters
         ----------
         pos: array_like
-            Desired position.
+            Position.
 
         Returns
         -------
         tuple
-            A tuple in which first element is the normal and the second is the refractive index.
+            First element is the normal and the second is the refractive index.
+
+        Raises
+        ------
+        AssertionError
+            If value is outside cell boundaries.
         '''
-        #this returns surface normal (if exists) and the refractive index of a given photon in a given position
         
         assert all([abs(pos[i])<=self.size[i]/2.0 for i in range(3)])
-
         indexes = self.pos_to_grid(pos)
-
         return ([self.normal[0][indexes[0], indexes[1], indexes[2]],
             self.normal[1][indexes[0], indexes[1], indexes[2]], 
             self.normal[2][indexes[0], indexes[1], indexes[2]]], self.index[indexes[0], indexes[1], indexes[2]])
 
     def show_single_photons2D(self, my_photon_lists, mode='all', binning=21):
         '''
-        See Also
-        --------
+        Show a 2 dimensional histogram for a single photon list. Can be used for plans
+        perpendicular to x, y and z axis.
 
-        Deprecated function. Please access photon_list properties manually.
+        Parameters
+        ----------
+        my_photon_lists: array_like
+            An array of length 1. Element is an class.photon_list
+        mode: str
+            If '-verbose', prints the number of photons plotted.
+        binning: int
+            Number of bins in the histogram. X and Y bins are equal.
+
+        Raises
+        ------
+        AssertionError:
+            If my_photon_lists have len() different from 1.
+        Exception:
+            If my_photon_list[0] is not a plan perpendicular to x, y or z.
         '''
 
         assert len(my_photon_lists) == 1
@@ -841,6 +856,8 @@ class Simu:
                 plan = 'yz'
                 axes.set_xlabel('Y')
                 axes.set_ylabel('Z')
+            else:
+                raise Exception('Plan must be perpendicular to x, y or z.')
 
             for photon in photon_list.photons:
                 ipos = (photon.pos)
@@ -861,7 +878,7 @@ class Simu:
 
         fig, axes = plt.subplots(nrows=1, ncols=len(my_photon_lists), sharex=False, sharey=False)
 
-        assert hasattr(my_photon_lists[00], 'photons')
+        assert hasattr(my_photon_lists[0], 'photons')
         unpack_2d_photons(my_photon_lists[0])
 
         plt.show()
@@ -869,10 +886,24 @@ class Simu:
 
     def show_photons2D(self, my_photon_lists, mode='all', binning=21):
         '''
-        See Also
-        --------
+        Show a 2 dimensional histogram for an array of photon lists. Can be used for plans
+        perpendicular to x, y and z axis.
 
-        Deprecated function. Please access photon_list properties manually.
+        Parameters
+        ----------
+        my_photon_lists: array_like
+            An array of length 1. Element is an class.photon_list
+        mode: str
+            If '-verbose', prints the number of photons plotted.
+        binning: int
+            Number of bins in the histogram. X and Y bins are equal.
+
+        Raises
+        ------
+        AssertionError:
+            If my_photon_lists must have len() less or equal to 1.
+        Exception:
+            If elements in my_photon_list are not a plan perpendicular to x, y or z.
         '''
 
         assert len(my_photon_lists)>1
@@ -898,6 +929,8 @@ class Simu:
                 plan='yz'
                 axes[sindex].set_xlabel('Y')
                 axes[sindex].set_ylabel('Z')
+            else:
+                raise Exception('Plan must be perpendicular to x, y or z.')
 
             for photon in photon_list.photons:
                 ipos = (photon.pos)
@@ -922,12 +955,13 @@ class Simu:
 
     def show_created_elements(self, mode):
         '''
-        Function shows in 3D elements created. Those are the initial conditions of the problem
+        Shows 3D projection of the initial condition of the problem.
 
         Parameters
         ----------
         mode: str
-            Defines what is displayed. 'all' displays all, **'all-noplan'** or **'-noplan'** excludes analyzes plans and anything else display only photons.
+            'all' displays everything. If '-noplan' is appended, it excludes analyzes plans. Appending '-verbose'
+             prints the number of initial photons.
         '''
         
         fig = plt.figure()
@@ -936,7 +970,8 @@ class Simu:
         xrefr, yrefr, zrefr = self.grid_to_pos(numpy.where(self.index>1.00))
 
         def unpack_photons(photon_list):
-            print(f'Unpacking {len(photon_list)} photons.')
+            if '-verbose' in mode:
+                print(f'Unpacking {len(photon_list)} initial photons.')
             
             phx, phy, phz = list(), list(), list()
             nphx, nphy, nphz = list(), list(), list()
@@ -980,14 +1015,20 @@ class Simu:
 
     def show_elements(self, my_photon_lists, mode='all-noplan'):
         '''
-        Shows in 3D elements at the end of simulation.
+        Shows 3D projection at the end of simulation.
 
         Parameters
         ----------
         my_photon_lists: array_like
-            Array_like containing **class.photon_list** objects.
+            Must contain class.photon_list objects.
         mode: str
-            Defines what is displayed. 'all' displays all, **'all-noplan'** or **'-noplan'** excludes analyzes plans and anything else display only photons.
+            'all' displays everything. If '-noplan' is appended, it excludes analyzes plans. Appending '-verbose'
+             prints the number of initial photons.
+
+        Raises
+        ------
+        AssertionError:
+            If my_photon_list is not a list of class.photon_list objects.
         '''
 
         fig = plt.figure()
@@ -1045,42 +1086,56 @@ class Simu:
 
         plt.show()
 
-    def d2_flex_source(self, r, c=[0, 0, 0], normal=[0, 0, 1], na=0.0, angles=11, plan='xy'):
+    def d2_flex_source(self, radius, center=[0, 0, 0], normal=[0, 0, 1], na=0.0, angles=11, plan='xy'):
         '''
-        Creates a 2d source along axis z with a numerical aperture
+        A circular flexible source method. It can create planar sources in X, Y or Z with a given
+        normal vector and a given numerical aperture referenced by the normal. Angle discretization
+        is controllable. A point source is also readily available.
 
         Parameters
         ----------
-        r: float
-            Source radius. If 0.0, creates a point source.
-        c: array_like:
+        radius: float
+            Source radius. If 0.0, creates a point source. Use 'plan' to create a point source.
+        center: array_like:
             Source center.
         normal: array_like
-            Source normal. Photon propagation direction
+            Source normal. Photon propagation direction.
         na: float
-            Source numerical aperture along axis *[1, 1, 0]*.
+            Source numerical aperture referenced by the normal vector axis.
         angles: int
-            Numerical aperture discretization
+            Numerical aperture discretization.
+
+        Notes
+        -----
+        When using the point source, radius value is not meaningful. You can create a point source
+        by inputing 0 in radius value. This is however not 100% correct because you can have points
+        inside your resolution grid volume cell.
 
         Examples
         -------
-        >>> d2_source(0.1, [0, 0, 0], [0, 0, 1], na=0.0, angles=1)
+        >>> d2_flex_source(0.1, [0, 0, 0], [0, 0, 1], na=0.0, angles=1, plan='xy')
 
-        Creates a collimated source with radius 0.1 centered at [0, 0, 0].
+        Creates a collimated source with radius 0.1 centered at [0, 0, 0] propagating in Z direction at X-Y plan.
 
-        >>> d2_source(0.0, [0, 0, 0], [0, 0, 1], na=0.22, angles=11)
+        >>> d2_flex_source(0.1, [0, 0, 0], [0, 1, 0], na=0.0, angles=1, plan='xy')
 
-        Creates a point source centered at [0, 0, 0] with numerical aperture 0.22. Angles are discretized by 0.04 (-0.22 to 0.22) in 11 points.
+        Creates a collimated source with radius 0.1 centered at [0, 0, 0] propagating in Y direction at X-Y plan.
 
-        >>> d2_source(0.3, [0, 0, 0], [0, 0, 1], na=0.22, angles=11)
+        >>> d2_flex_source(0.25, [0, 0, 2.0], [0, -1, 0], na=0.0, angles=1, plan='xz')
 
-        Creates a diverging source centered at [0, 0, 0] with numerical aperture 0.22 and radius 0.3.
+        Creates a collimated source with radius 0.25 centered at [0, 0, 2.0] propagating in -Y direction at X-Z plan.
+
+        >>> d2_flex_source(10.0, [0, 0, 0], [0, 0, 1], na=0.22, angles=11, plan='point')
+
+        Creates a point source centered at [0, 0, 0] with numerical aperture 0.22 propagating in Z axis.
+        Angles are discretized by 0.044 (-0.22 to 0.22) in 11 points. Note that 10.0 in radius changes nothing.
 
         Raises
         ------
         AssertionError
-            If numerical aperture is higher than 0, propagation vector must be aligned with an axis. This
-            function does not create an angle cone for an arbitrary propagation vector.
+            Negative numerical aperture and - if numerical aperture is higher than 0 - normal not in an axis
+             (can be [0, 0, 1]; [0, 1, 0] or [1, 0, 0]).
+
         '''
 
         def create_photon(pos, norm):
@@ -1090,6 +1145,7 @@ class Simu:
 
 
         assert 'xy' in plan or 'xz' in plan or 'yz' in plan or 'point' in plan
+        assert na>=0
 
         if na > 0:
             check_list = [normal[i] == 0 for i in range(3)]
@@ -1116,10 +1172,10 @@ class Simu:
         else:
             all_vecs = numpy.asarray([normal])
 
-        xc, yc, zc = c
-        x = numpy.arange(xc - r, xc + self.res/2., self.res)
-        y = numpy.arange(yc - r, yc + self.res/2., self.res)
-        z = numpy.arange(zc - r, zc + self.res/2., self.res)
+        xc, yc, zc = center
+        x = numpy.arange(xc - radius, xc + self.res/2., self.res)
+        y = numpy.arange(yc - radius, yc + self.res/2., self.res)
+        z = numpy.arange(zc - radius, zc + self.res/2., self.res)
 
         if 'x' not in plan:
             x = [xc]
@@ -1131,7 +1187,7 @@ class Simu:
         for xpos in tqdm(x, desc='Source'):
             for ypos in y:
                 for zpos in z:
-                    if (xpos - xc) ** 2 + (ypos - yc) ** 2 + (zpos - zc)**2 <= r ** 2:
+                    if (xpos - xc) ** 2 + (ypos - yc) ** 2 + (zpos - zc)**2 <= radius ** 2:
                         for normal2 in all_vecs:
                             create_photon([xpos, ypos, zpos], normal2)
                             if 'x' in plan: create_photon([-xpos+2*xc, ypos, zpos], normal2)
