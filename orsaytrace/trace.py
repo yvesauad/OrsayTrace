@@ -1575,12 +1575,12 @@ class Simu:
         def assign(pos):
             xpos, ypos, zpos = pos
             ind = self.pos_to_grid([xpos, ypos, zpos])
-            self.assign_n(ind, n)
+            self.assign_n(ind, n_refr)
             self.assign_normal(ind, [(1/pp)*(xpos-x0), (1/pp)*(ypos-y0), 1])
         
-        x0, y0, z0 = c
-        ymax = y0 + 0.5*th; ymin = y0 - 0.5*th
-        xmax = x0 + 0.5*wid; xmin = x0 - 0.5*wid
+        x0, y0, z0 = center
+        ymax = y0 + 0.5*thickness; ymin = y0 - 0.5*thickness
+        xmax = x0 + 0.5*width; xmin = x0 - 0.5*width
         zmax = z0; zmin = z0 - (1/2*pp)*(max(abs(ymax-y0), abs(ymin-y0))**2+max(abs(xmax-x0), abs(xmin-x0))**2)
 
         x = numpy.arange(x0, xmax, self.res/self.ss)
@@ -1596,65 +1596,73 @@ class Simu:
                         assign([-xpos+2*x0, -ypos+2*y0, zpos])
 
 
-    def create_sphere_element(self, c, r, n):
+    def create_sphere_element(self, center, radius, n_refr):
         '''
         Creates a spherical element.
 
         Parameters
         ----------
-        c: array_like
+        center: array_like
             A 3 dimensional sphere center.
-        r: float
+        radius: float
             Sphere radius.
-        n: float
-            Element index of refraction.
+        n_refr: float
+            Index of refraction.
 
         '''
         
         def assign(pos):
             xpos, ypos, zpos = pos
             ind = self.pos_to_grid([xpos, ypos, zpos])
-            self.assign_n(ind, n)
+            self.assign_n(ind, n_refr)
             self.assign_normal(ind, [xpos-c[0], ypos-c[1], zpos-c[2]])
 
-        x = numpy.arange(c[0], c[0]+r+self.res, self.res/self.ss)
-        y = numpy.arange(c[1], c[1]+r+self.res, self.res/self.ss)
-        z = numpy.arange(c[2], c[2]+r+self.res, self.res/self.ss)
+        xc, yc, zc = center
+
+        x = numpy.arange(xc, xc+radius+self.res, self.res/self.ss)
+        y = numpy.arange(yc, yc+radius+self.res, self.res/self.ss)
+        z = numpy.arange(zc, zc+radius+self.res, self.res/self.ss)
         for xpos in tqdm(x, desc='Sphere Section'):
             for ypos in y:
                 for zpos in z:
-                    d = self.distance([xpos, ypos, zpos], c)
-                    if d**2<=(r+self.res)**2:
+                    d = self.distance([xpos, ypos, zpos], center)
+                    if d**2<=(radius+self.res)**2:
                         assign([xpos, ypos, zpos])
-                        assign([xpos, -ypos+2*c[1], zpos])
-                        assign([xpos, -ypos+2*c[1], -zpos+2*c[2]])
-                        assign([xpos, ypos, -zpos+2*c[2]])
+                        assign([xpos, -ypos+2*yc, zpos])
+                        assign([xpos, -ypos+2*yc, -zpos+2*zc])
+                        assign([xpos, ypos, -zpos+2*zc])
                         
-                        assign([-xpos+2*c[0], ypos, zpos])
-                        assign([-xpos+2*c[0], -ypos+2*c[1], zpos])
-                        assign([-xpos+2*c[0], -ypos+2*c[1], -zpos+2*c[2]])
-                        assign([-xpos+2*c[0], ypos, -zpos+2*c[2]])
+                        assign([-xpos+2*xc, ypos, zpos])
+                        assign([-xpos+2*xc, -ypos+2*yc, zpos])
+                        assign([-xpos+2*xc, -ypos+2*yc, -zpos+2*zc])
+                        assign([-xpos+2*xc, ypos, -zpos+2*zc])
 
 
-    def create_rectangle_element(self, val, n, normal):
+    def create_rectangle_element(self, ROI, n_refr, normal):
         '''
         Creates a rectangular element.
 
         Parameters
         ----------
-        val: array_like
-            A 6 dimensional array containing [xmin, xmax, ymin, ymax, zmin, zmax]
-        n: float
-            The index of refraction
+        ROI: array_like
+            A 6 dimensional array in the form [xmin, xmax, ymin, ymax, zmin, zmax].
+        n_refr: float
+            The index of refraction.
         normal: array_like
-            A 3 dimensional array containing the surface normal. 
+            A 3 dimensional array containing the surface normal.
+
+        Raises
+        ------
+        AssertionError
+            If ROI length in any dimension is negative.
 
         Notes
         -----
-        You can use a rectangular element to destroy some of your active elements by setting index of refraction as 1.0 and normal vector as [0, 0, 0].
+        You can use a rectangular element to destroy some of your active elements by
+        setting index of refraction as 1.0 and normal vector as [0, 0, 0].
         '''
         
-        xmin, xmax, ymin, ymax, zmin, zmax = val
+        xmin, xmax, ymin, ymax, zmin, zmax = ROI
         xc, yc, zc = (xmin+xmax)/2., (ymin+ymax)/2., (zmax+zmin)/2.
         xl, yl, zl = (xmax-xmin)/2., (ymax-ymin)/2., (zmax-zmin)/2.
         assert xl>=0 and yl>=0 and zl>=0
@@ -1666,25 +1674,25 @@ class Simu:
         min_index = self.pos_to_grid([min(x), min(y), min(z)])
         max_index = self.pos_to_grid([max(x), max(y), max(z)])
         
-        self.assign_block_n(min_index, max_index, n)
+        self.assign_block_n(min_index, max_index, n_refr)
         self.assign_block_normal(min_index, max_index, normal)
 
-    def create_cylinder_element(self, center, radius, length, n, normal):
+    def create_cylinder_element(self, center, radius, length, n_refr, normal):
         '''
-        Creates a cilindrical element.
+        Creates a cylindrical element.
 
         Parameters
         ----------
         center: array_like
             A 3 dimensional of center position.
         radius: float
-            Cilinder radius.
+            Cylinder radius.
         length: float
-            Cilinder length.
-        n: float
+            Cylinder length.
+        n_refr: float
             Index of refraction.
         normal: array_like
-            A 3 dimensional array of cilinder axis.
+            A 3 dimensional vector of cylinder axis.
         '''
         
         xc, yc, zc = center
@@ -1692,7 +1700,7 @@ class Simu:
         def assign(pos):
             xpos, ypos, zpos = pos
             ind = self.pos_to_grid([xpos, ypos, zpos])
-            self.assign_n(ind, n)
+            self.assign_n(ind, n_refr)
             self.assign_normal(ind, normal)
         
         x = numpy.arange(xc-radius, xc+self.res, self.res/self.ss)
@@ -1717,25 +1725,28 @@ class Simu:
 
     def create_thin_lens(self, cplane, focus, aperture, index_refr, lens_type='plane-convex'):
         '''
-        Creates a thin lens based on other geometrical elements. Allow one to create either a plane-convex or a convex-plane lens.
+        Creates a thin lens based on other basical geometrical elements. Allows one to create
+        either a plane-convex or a convex-plane lens.
 
         Parameters
         ----------
         cplane: array_like
-            A 3 dimensional array representing the center of the lens. This point is always in the plane side of the lens.
+            A 3 dimensional array representing the center of the lens.
+            This point is always in the flat side of the lens.
         focus: float
             Lens focus.
         aperture: float
-            Lens aperture. 
+            Lens aperture.
         index_refr: float
             Lens index of refraction.
         lens_type: str
-            Must be either plane-convex or convex-plane
+            The type of the lens.
 
         Raises
         ------
         AssertionError
-            If aperture is bigger than focus or if type is not 'plane-convex' or 'convex-plane', raises an exception error.
+            If aperture is bigger than focus or if lens_type is not 'plane-convex'
+            or 'convex-plane'.
         '''
         xc, yc, zp = cplane
         r = focus/2.0
@@ -1756,22 +1767,26 @@ class Simu:
 
     def distance(self, vec1, vec2):
         '''
-        Distance between two points.
+        Calculates the distance between two points.
 
         Parameters
         ----------
         vec1: array_like
-            A 3 dimensional array representing first position.
+            A 3 dimensional array for the first position.
         vec2: array_like
-            A 3 dimensional array representing second position.
+            A 3 dimensional array for the second position.
 
-
+        Returns
+        -------
+        float
+            The distance.
         '''
+
         return numpy.sum(numpy.power(numpy.subtract(vec1, vec2), 2))**0.5
 
     def is_photon_in_cell(self, photon):
         '''
-        Check if photon is in the cell.
+        Check if photon is in the simulation cell.
 
         Parameters
         ----------
@@ -1781,6 +1796,7 @@ class Simu:
         -------
         bool
         '''
+
         pos = photon.pos
         val = all([abs(pos[i])<self.size[i]/2. for i in range(3)])
         if val:
@@ -1790,18 +1806,23 @@ class Simu:
 
     def check_analysis_plan(self, photon):
         '''
-        Check if photon is in a created analysis plan.
+        Check if photon is in any created analysis plan.
 
         Parameters
         ----------
         photon: class.photon
-        rindex: int
-            Run index. Used for multi process simulations.
+
+        Returns
+        -------
+        bool
+            True if a photon is attempted to be added to a plan. It is possible that photon
+            does not pass the conditional requirement and ends up not being appended.
         '''
         pos = photon.pos
         for index, planes in enumerate(self.photon_lists):
             if planes.distance_point_to_plane(pos)<=self.res/2.0:
                 planes.add_photon(photon)
+                return True
 
     def create_analysis_plan(self, normal, value, **kargs):
         '''
@@ -1810,21 +1831,26 @@ class Simu:
         Parameters
         ----------
         normal: array_like
-            A 3 dimensional array of plan normal vector.
+            A 3 dimensional normal vector.
         value: float
             Indenpendent value of a plan equation.
         **kargs: dict
-            A dictionary that will be used as a condition dictionary. Photons will be added the plan only if satisfies this condition.
+            A dictionary that will be used as a condition dictionary.
+            Photons will be added the plan only if satisfies this condition.
 
         Notes
         -----
-        Condition must be an attribute of photon. It can take two forms: a single number or a tuple. Single number represents minimal values, while tuple represents a possible interval
+        Condition must be an attribute of photon. For int type attribute,
+        it can take two forms: a int or a tuple. int represents minimal values,
+        while tuple represents a possible interval. It is also possible to create
+        conditional plans using photon 'pos' attribute. In this case, see example
+        above for how to create it.
 
         Examples
         --------
         >>> create_analysis_plan([0, 1, 0], a, reflection_count = 1)
 
-        Example above creates a analyses plan with equation 
+        Example above creates an analyses plan with equation
         
         .. math:: y=a
 
@@ -1832,7 +1858,7 @@ class Simu:
         
         >>> create_analysis_plan([1, 2, 3], 3, reflection_count = (1, 1))
         
-        Example above creates a analyses plan with equation 
+        Example above creates an analyses plan with equation
         
         .. math:: (x + y + z) / \sqrt{14} = 3
 
@@ -1840,11 +1866,21 @@ class Simu:
         
         >>> create_analysis_plan([1, 0, 0], 0.4, refraction_count = (2, 30))
         
-        Example above creates a analyses plan with equation 
+        Example above creates an analyses plan with equation
         
         .. math:: x=0.4
 
         and with a condition that refraction_count is higher than 2 but smaller than 30.
+
+        >>> a.create_analysis_plan([0, 0, 1], 1.0, reflection_count = (1, 1), pos=([1.2, 0.0, 0.0], (0.1, 0.4)))
+
+        Example above creates an analyses plan with equation
+
+        .. math:: z = 1.0
+
+        and with a condition that reflection_count is exactly 1 and photon position has a distance
+        from the point [1.2, 0.0, 0.0] between 0.1 and 0.4.
+
         '''
         plist = photon_list(normal, value)
         plist.condition_dict = kargs
@@ -1852,21 +1888,17 @@ class Simu:
     
     def run_photon(self, initial_photons, rindex):
         '''
-        Simulatiom run for the initial set (or subset) of photons. It terminates when all photons leave the cell.
+        Simulation run for the initial set (or subset) of photons. It terminates
+        when all photons leave the cell.
 
         Parameters
         ----------
-        initial_photon_list: array_like
-            The complete set (or subset) of the intial photons.
+        initial_photons: array_like
+            The complete set (or subset) of the initial photons.
         rindex: int
-            Run index. Used for multi process simulations. 
-
-        See Also
-        --------
-        run: 
-            Starts the simulation for each set or subset of photon. Can be used with multi processing.
-
+            Run index. Used for multi process simulations.
         '''
+
         for photon in tqdm(initial_photons[rindex], desc=f'Running'):
             #while self.is_photon_in_cell(photon):
             while True:
@@ -1880,6 +1912,21 @@ class Simu:
                 self.check_analysis_plan(photon)
 
     def prepare_acquisition(self, split = 1):
+        '''
+        Internal function to prepare for multiprocess simulation. If no multiprocess is used, this
+        function is called nonetheless with split = 1.
+
+        Parameters
+        ----------
+        split: int
+            The number of processes. Slits initial photon list in 'split' smaller lists.
+
+        Raises
+        ------
+        AssertionError
+            If there is no initial photon list or if split is less or equal to zero.
+
+        '''
         assert self.photons.size
         assert split>0
 
@@ -1893,23 +1940,34 @@ class Simu:
         Parameters
         ----------
         run_index: int
-            Run index. Used for multi process simulation
+            Run index. Used for multi process simulation. This value is 0 for single process simulation.
         split: int
-            Split initial photons in equal parts of 'split'. Used for multi process simulation
+            Split initial photons in equal parts of 'split'.
         xsym: bool
-            If simulation is symmetric with respect to x axis, you can reduce number of running photons by two.
+            If simulation is symmetric with respect to x axis, you can reduce number
+            of running photons by two.
         ysym: bool
-            If simulation is symmetric with respect to y axis, you can reduce number of running photons by two.
+            If simulation is symmetric with respect to y axis, you can reduce number
+            of running photons by two.
 
         Returns
         -------
         array_like
-            Returns an array of class.photon_list. Lenght is given by the name of planes created. Each element in the list has class.photon objects. Length for each element is the number of photons saved for the correspondent plane.
+            Returns an arraLengthlass.photon_list. Lenght is given by the name of planes created.
+            Each element in the list has class.photon objects. Length for each element is the number
+            of photons saved for the correspondent plane.
 
         Raises
         ------
         AssertionError
             Raises an assertionError if run_index is smaller than split. You cannot run subset 1 if you have not splitted your initial photon array. Maximum run_index is always split-1. Raises an AssertionError also if there is no photons in the initial set.
+
+        See Also
+        --------
+        run_photon:
+            Starts the simulation for each set or subset of photon. Can be used with multi processing.
+        prepare_acquisition:
+            Function that must be called by user for multi process simulation.
         '''
 
         if not multiprocessing:
