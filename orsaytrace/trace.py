@@ -271,6 +271,7 @@ class photon_list():
         '''
 
         vals = float(numpy.average(self.get_weighted_inverse()))
+        print(vals)
         return vals
 
     def avg_distance_axis_z(self, center=[0, 0]):
@@ -1615,7 +1616,7 @@ class Simu:
             xpos, ypos, zpos = pos
             ind = self.pos_to_grid([xpos, ypos, zpos])
             self.assign_n(ind, n_refr)
-            self.assign_normal(ind, [xpos-c[0], ypos-c[1], zpos-c[2]])
+            self.assign_normal(ind, [xpos-xc, ypos-yc, zpos-zc])
 
         xc, yc, zc = center
 
@@ -1631,7 +1632,6 @@ class Simu:
                         assign([xpos, -ypos+2*yc, zpos])
                         assign([xpos, -ypos+2*yc, -zpos+2*zc])
                         assign([xpos, ypos, -zpos+2*zc])
-                        
                         assign([-xpos+2*xc, ypos, zpos])
                         assign([-xpos+2*xc, -ypos+2*yc, zpos])
                         assign([-xpos+2*xc, -ypos+2*yc, -zpos+2*zc])

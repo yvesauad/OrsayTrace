@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 f = 2.0
 lens_pos = -2.5
 res = 0.04
-pts = 201
+pts = 51
 sim_pts = 7
 
 z_plans = numpy.linspace(-4.5, 4.5, pts)
