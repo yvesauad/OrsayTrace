@@ -1933,7 +1933,7 @@ class Simu:
         self.photons = numpy.asarray(self.photons)
         self.photons = numpy.array_split(self.photons, split)
 
-    def run(self, run_index=0, multiprocessing=False, return_dict=dict() , xsym=False, ysym=False):
+    def run(self, run_index=0, multiprocessing=False, return_dict=dict(), xsym=False, ysym=False):
         '''
         Simulation run main function.
 
@@ -1941,8 +1941,11 @@ class Simu:
         ----------
         run_index: int
             Run index. Used for multi process simulation. This value is 0 for single process simulation.
-        split: int
-            Split initial photons in equal parts of 'split'.
+        multiprocessing: bool
+            Explicit if simulation must run using multi processes.
+        return_dict: dict
+            You must pass this argument from multiprocessing.manager in order to use
+            the multiprocessing capability.
         xsym: bool
             If simulation is symmetric with respect to x axis, you can reduce number
             of running photons by two.
@@ -1953,21 +1956,29 @@ class Simu:
         Returns
         -------
         array_like
-            Returns an arraLengthlass.photon_list. Lenght is given by the name of planes created.
-            Each element in the list has class.photon objects. Length for each element is the number
-            of photons saved for the correspondent plane.
+            Array containing objects from class.photon_list. len(array) is given by the name
+            of planes created. Length of each element is the number of photons saved for the
+            correspondent plane.
 
         Raises
         ------
         AssertionError
-            Raises an assertionError if run_index is smaller than split. You cannot run subset 1 if you have not splitted your initial photon array. Maximum run_index is always split-1. Raises an AssertionError also if there is no photons in the initial set.
+            If run_index is smaller than split (maximum run_index is always split-1) **or**
+            if there is no photons in the initial set **or** if it is a multiprocessing
+            simulation but return dict is not an instance of multiprocessing.managers.DictProxy.
 
         See Also
         --------
         run_photon:
-            Starts the simulation for each set or subset of photon. Can be used with multi processing.
+            Starts the simulation for each set or subset of photon. This is an internal
+            function and in normal conditions must not be called by user.
         prepare_acquisition:
-            Function that must be called by user for multi process simulation.
+            Must be called by user for multi process simulation. If a single process
+            simulation is used, this function is called internaly and user must not
+            bother.
+        merge_photon_list:
+            Must be called by user if using multi process simulation. For single process
+            simulation, this function must not be used.
         '''
 
         if not multiprocessing:
@@ -1998,12 +2009,13 @@ class Simu:
 
     def merge_photon_lists(self, my_photon_lists):
         '''
-        Merge photon lists in a single array. This function is used for multi processing simulations.
+        Merge photon lists in a single array. This function is used at the end of
+        multi processing simulations to bind together an array of class.photon_list.
 
         Parameters
         ----------
         my_photon_lists: array_like
-            An array containing objects class.photon_list
+            An array containing objects class.photon_list.
 
         Returns
         -------
@@ -2032,4 +2044,3 @@ class Simu:
         self.normal = numpy.asarray([numpy.zeros(self.grid), numpy.zeros(self.grid), numpy.zeros(self.grid)])
         
         return True
-    
