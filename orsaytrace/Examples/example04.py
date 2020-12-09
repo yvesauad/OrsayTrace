@@ -5,7 +5,7 @@ mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 
-x, y, z, res = 5., 5., 10., 0.03
+x, y, z, res = 5., 5., 10., 0.01
 
 focus = 0.3
 yvertex = 0.8

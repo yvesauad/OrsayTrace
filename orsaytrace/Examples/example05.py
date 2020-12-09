@@ -3,12 +3,12 @@ import numpy
 import multiprocessing
 import time
 
-for nproc in [1, 2, 4, 8, 12]:
+for nproc in [1, 2]:
     if __name__ == "__main__":
 
         x, y, z, res = 5, 5, 5, 0.05
         z_array = numpy.linspace(-z / 4, +z / 4, 30)
-        angles = 2
+        angles = 71
 
         start = time.perf_counter()
 

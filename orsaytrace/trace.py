@@ -5,9 +5,6 @@ from tqdm import tqdm
 import multiprocessing as multiproc
 import logging
 
-
-
-
 class photon_list():
     '''
     photon_list is a class that bounds photons together by a plane and a condition. Plane is characterized
