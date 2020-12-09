@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 for p in [2.0, 1.0]:
     for tr in [4.0, 3.0, 2.0, 1.0, 0.5, 0.25, 0.125]:
         for mesh in [1, 3, 5, 7]:
-            x, y, z, p, res = 5., 5., 5., 1.0, 0.02
+            x, y, z, res = 5., 5., 5., 0.02
             y_dist, na, angles = 0.3, 2.0, 11
             xc, yc, zc = 0, -0.5, -2.0 #Fiber Central Position
             min_x, max_x = -1.0, 1.0
