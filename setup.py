@@ -9,7 +9,7 @@ proj_urls = {
 setup(
         name='orsaytrace',
         packages = ['orsaytrace'],
-        version = '1.1.9',
+        version = '1.1.10',
         license = 'MIT',
         description = 'Flexible ray tracing for optics',
         long_description = open('README.rst').read(),

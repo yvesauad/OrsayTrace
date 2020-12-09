@@ -153,6 +153,7 @@ class photon_list():
         numpy.asarray
             A numpy array
         '''
+
         vals = numpy.asarray([photon.pos for photon in self.photons])
         return vals
 
@@ -271,7 +272,6 @@ class photon_list():
         '''
 
         vals = float(numpy.average(self.get_weighted_inverse()))
-        print(vals)
         return vals
 
     def avg_distance_axis_z(self, center=[0, 0]):
@@ -1812,17 +1812,14 @@ class Simu:
         ----------
         photon: class.photon
 
-        Returns
-        -------
-        bool
-            True if a photon is attempted to be added to a plan. It is possible that photon
-            does not pass the conditional requirement and ends up not being appended.
         '''
+
+        #Note: this func must return nothing because each photon can
+        #be appended to multiple planes at once.
         pos = photon.pos
         for index, planes in enumerate(self.photon_lists):
             if planes.distance_point_to_plane(pos)<=self.res/2.0:
                 planes.add_photon(photon)
-                return True
 
     def create_analysis_plan(self, normal, value, **kargs):
         '''
