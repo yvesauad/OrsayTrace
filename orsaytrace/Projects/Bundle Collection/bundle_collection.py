@@ -1,16 +1,19 @@
 import orsaytrace.trace as ot
 import numpy
 import matplotlib.pyplot as plt
+import os
 
-for p in [2.0, 1.0]:
-    for tr in [4.0, 3.0, 2.0, 1.0, 0.5, 0.25, 0.125]:
-        for mesh in [1, 3, 5, 7]:
+SAVEPATH = os.path.join(os.path.dirname(__file__), "Data") + "\\"
+
+for p in [2.0]:
+    for tr in [2.0, 1.0, 0.5, 0.25]:
+        for mesh in [1, 3, 5]:
             x, y, z, res = 5., 5., 5., 0.02
-            y_dist, na, angles = 0.3, 2.0, 11
+            y_dist, na, angles = 0.3, 2.0, 13
             xc, yc, zc = 0, -0.5, -2.0 #Fiber Central Position
             min_x, max_x = -1.0, 1.0
-            min_z, max_z = 2.0-p/2.-0.65, 2.0-p/2.+0.35
-            hist = 25
+            min_z, max_z = 2.0-p/2.-0.90, 2.0-p/2.+0.60
+            hist = 50
             a = ot.Simu(x, y, z, res)
 
             for x_src in numpy.linspace(min_x, max_x, hist):
@@ -47,7 +50,6 @@ for p in [2.0, 1.0]:
             y_new_list = [[ photon.init['pos'][1] for photon in pl[i].photons] for i in range(len(pl))]
             z_new_list = [[ photon.init['pos'][2] for photon in pl[i].photons] for i in range(len(pl))]
 
-
             fig, axes = plt.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
             theta = numpy.linspace(0, 2* numpy.pi, 180)
             a = tr * numpy.cos(theta) + xc
@@ -58,18 +60,17 @@ for p in [2.0, 1.0]:
                 b = unitr/1. * numpy.sin(theta) + pt[1]
                 axes.text(pt[0], pt[1], str(ipt))
                 axes.plot(a, b)
-            plt.savefig('map_' + str(p) + '_' + str(tr) + '_' + str(mesh) + '.png')
+            plt.savefig(SAVEPATH + 'map_' + str(p) + '_' + str(tr) + '_' + str(mesh) + '.png')
             plt.clf()
 
             if it==1:
                 fig, axes = plt.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
                 plt.hist2d(x_new_list[0], z_new_list[0], bins=hist-1, range=[[min_x, max_x], [min_z, max_z]])
                 plt.colorbar()
-                plt.savefig(str(p) + '_' + str(tr) + '_' + str(mesh) + '.png')
+                plt.savefig(SAVEPATH + str(p) + '_' + str(tr) + '_' + str(mesh) + '.png')
             else:
                 for i in range(it):
                     fig, axes = plt.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
-                    #plt.clf()
                     plt.hist2d(x_new_list[i], z_new_list[i], bins=hist-1, range=[[min_x, max_x], [min_z, max_z]])
                     plt.colorbar()
-                    plt.savefig(str(p) + '_' + str(tr) + '_' + str(mesh) + '_' + str(i) + '.png')
+                    plt.savefig(SAVEPATH + str(p) + '_' + str(tr) + '_' + str(mesh) + '_' + str(i) + '.png')

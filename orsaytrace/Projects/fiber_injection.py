@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 for p in [2.0, 1.0]:
     for tr in [0.5, 3.0, 2.0, 1.0, 0.5, 0.25, 0.125]:
-        x, y, z, res = 5., 5., 5., 0.03
+        x, y, z, res = 5., 5., 5., 0.05
         y_dist, na, angles = 0.3, 0.00, 3
         xc, yc, zc = 0, -0.5, -2.0 #Fiber Central Position
         min_x, max_x = -1.0, 1.0
@@ -22,12 +22,11 @@ for p in [2.0, 1.0]:
         a.create_analysis_plan([0, 1, 0], -0.05, reflection_count=(1, 1))
         a.create_analysis_plan([0, 0, 1], -1.0, reflection_count=(0, 0))
 
-        #a.show_created_elements('photons')
+        a.show_created_elements('photons')
         pl = a.run()
-        #a.show_elements(pl, mode='-verbose')
+        a.show_elements(pl, mode='-verbose')
         a.show_photons2D(pl, mode='-verbose', binning=100)
 
-        oi
         pl = pl[1:]
 
         x_new_list = [[ photon.init['pos'][0] for photon in pl[i].photons] for i in range(len(pl))]
